@@ -425,3 +425,15 @@
 - [ ] Testar salvamento de imagens no dataset incremental
 - [ ] Validar análise Gemini Vision com imagem + Grad-CAM
 - [ ] Publicar versão final
+
+
+## Painel Administrativo e Retreinamento Automático
+
+- [x] Corrigir comando Python (usar python3 em vez de python3.11)
+- [x] Criar página /admin/dataset com dashboard de métricas
+- [x] Implementar retreinamento automático (threshold: 2 imagens)
+- [x] Adicionar geração de imagens sintéticas para balanceamento
+- [x] Criar documentação completa (DOCUMENTATION.md)
+- [ ] Testar dashboard de métricas
+- [ ] Testar retreinamento automático
+- [ ] Publicar versão final
