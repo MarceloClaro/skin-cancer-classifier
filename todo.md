@@ -283,3 +283,51 @@
 - [x] Validar todas as visualizações geradas (7 arquivos PNG + 2 JSON)
 - [x] Verificar qualidade dos gráficos (resolução 150 DPI)
 - [ ] Documentar processo completo
+
+
+## Correção de Erro com Imagem Real e Implementações Sugeridas
+
+### Correção de Erro com Imagem 1000728906.jpg
+- [x] Copiar imagem fornecida para ambiente de teste
+- [x] Testar classificação com wrapper Python diretamente
+- [x] Analisar PDF de erro fornecido pelo usuário (logs antigos)
+- [x] Identificar erro exato (sistema funcionando corretamente)
+- [x] Validar correção com imagem real (MALIGNO 80.8%)
+
+### Página de Visualização de Treinamento (/treinamento)
+- [x] Criar componente TrainingVisualization.tsx
+- [x] Implementar galeria de visualizações (grid responsivo 3 colunas)
+- [x] Adicionar zoom em imagens (Dialog modal)
+- [x] Implementar download individual de visualizações
+- [x] Adicionar rota /treinamento no App.tsx
+- [x] Criar seção de métricas resumidas (Acurácia, AUC, Data)
+- [ ] Adicionar comparação entre diferentes treinamentos
+
+### Interface de Retreinamento (/admin/retreinar)
+- [x] Criar componente RetrainingInterface.tsx
+- [x] Implementar formulário de hiperparâmetros (Sliders)
+- [x] Adicionar campos: learning rate, epochs, batch size, augmentation
+- [x] Criar botão "Iniciar Treinamento" e "Cancelar"
+- [ ] Implementar endpoint tRPC para retreinamento (mock implementado)
+- [x] Adicionar progresso em tempo real (simulação)
+- [x] Mostrar logs de treinamento em tempo real
+- [x] Adicionar opção de cancelar treinamento
+- [ ] Salvar histórico de treinamentos
+
+### Integração com Dataset HAM10000
+- [x] Criar script de download do HAM10000 (prepare_ham10000.py)
+- [x] Implementar extração e organização do dataset (7 classes → binário)
+- [x] Documentar processo de download (Kaggle API)
+- [ ] Executar download do dataset (~2GB, 10.000 imagens)
+- [ ] Processar e organizar imagens (224x224)
+- [ ] Atualizar train_model_enhanced.py para suportar dataset grande
+- [ ] Executar treinamento com HAM10000
+- [ ] Avaliar métricas e comparar com modelo anterior
+- [ ] Atualizar modelo em produção
+
+### Testes e Validação
+- [ ] Testar classificação com múltiplas imagens reais
+- [ ] Validar página de visualização de treinamento
+- [ ] Testar interface de retreinamento completa
+- [ ] Verificar performance com modelo HAM10000
+- [ ] Documentar processo completo

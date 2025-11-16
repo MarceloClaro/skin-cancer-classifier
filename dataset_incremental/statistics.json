@@ -1,8 +1,8 @@
 {
-  "last_updated": "2025-11-16T13:09:39.460330",
+  "last_updated": "2025-11-16T14:16:35.536176",
   "classes": {
     "BENIGNO": 0,
-    "MALIGNO": 1
+    "MALIGNO": 2
   },
-  "total": 1
+  "total": 2
 }
