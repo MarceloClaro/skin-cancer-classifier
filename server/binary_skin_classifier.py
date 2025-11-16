@@ -171,15 +171,13 @@ class BinarySkinClassifier:
             # Obter base model e camada convolucional
             base_model = self.model.get_layer('mobilenetv2_1.00_224')
             conv_layer = base_model.get_layer(last_conv_layer_name)
-            logger.info(f"Camada obtida: {conv_layer.name} (shape: {conv_layer.output_shape})")
+            logger.info(f"Camada obtida: {conv_layer.name} (tipo: {conv_layer.__class__.__name__})")
             
             # Criar modelo Grad-CAM que conecta input do modelo principal à saída da conv layer
+            # Precisamos acessar a saída da camada conv do base_model
             grad_model = keras.Model(
                 inputs=self.model.input,
-                outputs=[
-                    conv_layer.output,  # Saída da camada convolucional
-                    self.model.output   # Saída final do modelo
-                ]
+                outputs=[base_model.get_layer(last_conv_layer_name).output, self.model.output]
             )
             logger.info("Modelo Grad-CAM criado com sucesso")
             

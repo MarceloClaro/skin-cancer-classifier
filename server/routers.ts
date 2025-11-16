@@ -412,6 +412,117 @@ print(json.dumps(diagnosis))
         }
       }),
   }),
+
+  // Model download router
+  model: router({
+    // Obter informações do modelo TFLite
+    getInfo: publicProcedure.query(async () => {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        
+        const tfliteDir = '/home/ubuntu/skin_cancer_classifier_k230_page/models/tflite';
+        const float32Path = path.join(tfliteDir, 'skin_cancer_k230.tflite');
+        const quantizedPath = path.join(tfliteDir, 'skin_cancer_k230_quantized.tflite');
+        const readmePath = path.join(tfliteDir, 'README.md');
+        
+        const info: any = {
+          available: false,
+          models: {}
+        };
+        
+        // Verificar modelo float32
+        if (fs.existsSync(float32Path)) {
+          const stats = fs.statSync(float32Path);
+          info.models.float32 = {
+            filename: 'skin_cancer_k230.tflite',
+            size_mb: (stats.size / (1024 * 1024)).toFixed(2),
+            path: float32Path
+          };
+          info.available = true;
+        }
+        
+        // Verificar modelo quantizado
+        if (fs.existsSync(quantizedPath)) {
+          const stats = fs.statSync(quantizedPath);
+          info.models.quantized = {
+            filename: 'skin_cancer_k230_quantized.tflite',
+            size_mb: (stats.size / (1024 * 1024)).toFixed(2),
+            path: quantizedPath,
+            recommended: true
+          };
+          info.available = true;
+        }
+        
+        // Verificar documentação
+        if (fs.existsSync(readmePath)) {
+          info.documentation = {
+            filename: 'README.md',
+            path: readmePath
+          };
+        }
+        
+        return info;
+      } catch (error: any) {
+        console.error("[MODEL] Erro ao obter informações:", error);
+        return { available: false, error: error.message };
+      }
+    }),
+    
+    // Download do modelo TFLite
+    download: publicProcedure
+      .input(z.object({
+        type: z.enum(['float32', 'quantized', 'documentation']).default('quantized')
+      }))
+      .query(async ({ input }) => {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          
+          const tfliteDir = '/home/ubuntu/skin_cancer_classifier_k230_page/models/tflite';
+          
+          let filePath: string;
+          let filename: string;
+          
+          switch (input.type) {
+            case 'float32':
+              filePath = path.join(tfliteDir, 'skin_cancer_k230.tflite');
+              filename = 'skin_cancer_k230.tflite';
+              break;
+            case 'quantized':
+              filePath = path.join(tfliteDir, 'skin_cancer_k230_quantized.tflite');
+              filename = 'skin_cancer_k230_quantized.tflite';
+              break;
+            case 'documentation':
+              filePath = path.join(tfliteDir, 'README.md');
+              filename = 'skin_cancer_k230_README.md';
+              break;
+            default:
+              throw new Error('Tipo de arquivo inválido');
+          }
+          
+          if (!fs.existsSync(filePath)) {
+            throw new Error('Arquivo não encontrado');
+          }
+          
+          // Ler arquivo como base64
+          const fileBuffer = fs.readFileSync(filePath);
+          const fileBase64 = fileBuffer.toString('base64');
+          
+          return {
+            success: true,
+            filename: filename,
+            data: fileBase64,
+            size: fileBuffer.length,
+            type: input.type
+          };
+          
+        } catch (error: any) {
+          console.error("[MODEL] Erro ao fazer download:", error);
+          throw new Error(`Erro ao fazer download: ${error.message}`);
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

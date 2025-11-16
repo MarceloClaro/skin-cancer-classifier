@@ -80,21 +80,47 @@ def classify_image(image_path: str, generate_gradcam: bool = True, generate_diag
         # Diagnóstico
         if generate_diagnosis:
             try:
-                logger.info("Gerando diagnóstico...")
-                from diagnosis_generator import get_diagnosis_generator
+                logger.info("Gerando análise multimodal com Gemini Vision...")
+                from gemini_vision_analyzer import get_gemini_vision_analyzer
                 
-                generator = get_diagnosis_generator()
-                diagnosis = generator.generate_diagnosis(classification_result)
+                analyzer = get_gemini_vision_analyzer()
+                diagnosis = analyzer.analyze_lesion(
+                    image_path=image_path,
+                    classification_result=classification_result,
+                    gradcam_base64=result.get('gradcam')
+                )
                 result['diagnosis'] = diagnosis
-                logger.info("✓ Diagnóstico gerado")
+                logger.info(f"✓ Análise gerada (multimodal: {diagnosis.get('multimodal', False)})")
             except Exception as e:
-                logger.error(f"Erro ao gerar diagnóstico: {e}")
+                logger.error(f"Erro ao gerar análise: {e}")
                 logger.error(traceback.format_exc())
                 result['diagnosis'] = {
                     'success': False,
                     'error': str(e),
-                    'diagnosis': 'Diagnóstico não disponível'
+                    'analysis': f"Análise não disponível. Classificação: {classification_result.get('class_name', 'Desconhecido')} ({classification_result.get('confidence', 0):.1f}%)",
+                    'multimodal': False
                 }
+        
+        # Salvar imagem no dataset incremental
+        try:
+            logger.info("Salvando imagem no dataset incremental...")
+            from dataset_manager import get_dataset_manager
+            
+            manager = get_dataset_manager()
+            save_result = manager.save_classified_image(
+                image_path=image_path,
+                classification_result=classification_result,
+                save_original=True
+            )
+            result['saved_to_dataset'] = save_result
+            
+            if save_result.get('success'):
+                logger.info(f"✓ Imagem salva no dataset: {save_result.get('filename')}")
+            else:
+                logger.info(f"✓ Imagem não salva: {save_result.get('reason', 'Desconhecido')}")
+        except Exception as e:
+            logger.error(f"Erro ao salvar no dataset: {e}")
+            result['saved_to_dataset'] = {'success': False, 'error': str(e)}
         
         logger.info("=== CLASSIFICAÇÃO CONCLUÍDA COM SUCESSO ===")
         return result

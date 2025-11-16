@@ -1,0 +1,13 @@
+{
+  "filename": "MALIGNO_20251116_130939_1e6f9384.png",
+  "class": "MALIGNO",
+  "confidence": 0.6467747092247009,
+  "probabilities": {
+    "BENIGNO": 0.3532252907752991,
+    "MALIGNO": 0.6467747092247009
+  },
+  "timestamp": "2025-11-16T13:09:39.460107",
+  "user_id": null,
+  "image_hash": "1e6f9384426c77982ed4a1a0865d58d5",
+  "original_path": "/home/ubuntu/test_skin_lesion.png"
+}

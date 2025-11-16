@@ -124,3 +124,51 @@
 - [x] Adicionar tratamento de exceções apropriado
 - [x] Validar correção com múltiplos testes (Grad-CAM: 153.770 chars)
 - [x] Documentar solução e prevenção (TROUBLESHOOTING.md)
+
+
+## Melhorias Avançadas do Sistema de Classificação
+
+### Correção de Erro Persistente
+- [x] Verificar logs do servidor em tempo real
+- [x] Reproduzir erro com upload de imagem via interface web
+- [x] Analisar resposta completa do endpoint tRPC
+- [x] Identificar causa raiz específica do erro atual (SRE module mismatch + Grad-CAM)
+- [x] Implementar correção definitiva (wrapper Python isolado)
+
+### Análise Multimodal com Gemini Vision
+- [x] Integrar Gemini Vision API para análise de imagens
+- [x] Criar prompt especializado para dermatologia (critérios ABCD, diagnóstico diferencial)
+- [x] Combinar classificação CNN + análise LLM
+- [x] Gerar diagnóstico rico com contexto visual (inclui Grad-CAM)
+- [x] Implementar fallback robusto
+
+### Sistema de Salvamento de Imagens
+- [x] Criar estrutura de diretórios para dataset incremental
+- [x] Salvar imagens classificadas com metadados (classe, confiança, timestamp)
+- [x] Organizar por classe predita (BENIGNO/MALIGNO)
+- [x] Implementar versionamento de dataset (hash MD5 para evitar duplicatas)
+- [ ] Criar interface de revisão manual (admin)
+
+### Retreinamento Automático
+- [ ] Criar script de retreinamento incremental
+- [ ] Implementar data augmentation adaptativo
+- [ ] Monitorar métricas de performance
+- [ ] Salvar checkpoints de modelos
+- [ ] Implementar A/B testing de modelos
+
+### Exportação TFLite
+- [x] Converter modelo Keras para TFLite
+- [x] Otimizar modelo (quantização INT8 - 69.8% compressão)
+- [x] Validar acurácia pós-conversão
+- [x] Criar endpoint de download do modelo (model.download)
+- [x] Gerar documentação de uso (K230) com exemplos Python/C++
+- [x] Adicionar botão de download na interface
+
+### Testes e Validação
+- [x] Testar fluxo completo via wrapper Python (classificação + Grad-CAM + análise)
+- [x] Validar salvamento de imagens (dataset_incremental com hash MD5)
+- [x] Verificar download de modelo TFLite (endpoint model.download)
+- [x] Corrigir Grad-CAM (acesso correto à camada Conv_1)
+- [x] Corrigir Gemini Vision (remover safetySettings inválido)
+- [ ] Testar fluxo completo via interface web
+- [ ] Documentar processo completo

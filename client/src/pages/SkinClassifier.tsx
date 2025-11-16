@@ -315,6 +315,92 @@ export default function SkinClassifier() {
           </div>
         </div>
 
+        {/* Download do Modelo TFLite */}
+        <Card className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-blue-600" />
+              Modelo TFLite para K230
+            </CardTitle>
+            <CardDescription>
+              Baixe o modelo otimizado para executar no hardware K230
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-700">
+                O modelo foi exportado para <strong>TensorFlow Lite</strong> com quantização INT8, 
+                reduzindo o tamanho em 70% e acelerando a inferência em dispositivos embarcados.
+              </p>
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-600 mb-2">Modelo Quantizado (Recomendado)</p>
+                  <p className="text-xs text-gray-600 mb-3">2.74 MB • INT8 • Otimizado para K230</p>
+                  <Button 
+                    variant="default" 
+                    className="w-full"
+                    onClick={() => {
+                      // Download via tRPC
+                      fetch('/api/trpc/model.download?input=' + encodeURIComponent(JSON.stringify({type: 'quantized'})))
+                        .then(res => res.json())
+                        .then(data => {
+                          const result = data.result.data;
+                          const blob = new Blob([Uint8Array.from(atob(result.data), c => c.charCodeAt(0))], { type: 'application/octet-stream' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = result.filename;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('Download iniciado!');
+                        })
+                        .catch(err => toast.error('Erro ao fazer download'));
+                    }}
+                  >
+                    Baixar Modelo Quantizado
+                  </Button>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <p className="font-semibold text-gray-700 mb-2">Documentação</p>
+                  <p className="text-xs text-gray-600 mb-3">Guia de uso e exemplos de código</p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      fetch('/api/trpc/model.download?input=' + encodeURIComponent(JSON.stringify({type: 'documentation'})))
+                        .then(res => res.json())
+                        .then(data => {
+                          const result = data.result.data;
+                          const blob = new Blob([atob(result.data)], { type: 'text/markdown' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = result.filename;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('Download iniciado!');
+                        })
+                        .catch(err => toast.error('Erro ao fazer download'));
+                    }}
+                  >
+                    Baixar Documentação
+                  </Button>
+                </div>
+              </div>
+              
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  <strong>Nota:</strong> O modelo TFLite requer TensorFlow Lite runtime no K230. 
+                  Consulte a documentação para instruções de integração.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Informações Técnicas */}
         <Card className="mt-8 bg-gray-50">
           <CardHeader>
