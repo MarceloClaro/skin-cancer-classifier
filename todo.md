@@ -455,3 +455,11 @@
 - [x] Criar endpoint dataset.triggerRetrain
 - [x] Implementar lógica de contagem de imagens
 - [x] Testar dashboard completo
+
+
+## Instalação de Dependências Python
+
+- [x] Instalar TensorFlow (2.20.0)
+- [x] Instalar Pillow (via opencv-python-headless)
+- [x] Instalar google-generativeai (0.8.5)
+- [x] Testar classificação completa (SUCESSO!)
