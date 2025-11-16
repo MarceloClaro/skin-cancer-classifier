@@ -447,3 +447,11 @@
 - [x] Adicionar links para: Classificador, Treinamento, Admin/Dataset, Admin/Retreinar
 - [x] Integrar menu em todas as páginas
 - [x] Testar navegação completa
+
+
+## Endpoints Dataset Dashboard
+
+- [x] Criar endpoint dataset.getStatistics
+- [x] Criar endpoint dataset.triggerRetrain
+- [x] Implementar lógica de contagem de imagens
+- [x] Testar dashboard completo

@@ -9,6 +9,7 @@ import { promisify } from "util";
 import { writeFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync } from "fs";
 
 const execAsync = promisify(exec);
 
@@ -534,6 +535,92 @@ print(json.dumps(diagnosis))
           throw new Error(`Erro ao fazer download: ${error.message}`);
         }
       }),
+  }),
+
+  // Dataset management router
+  dataset: router({
+    getStatistics: publicProcedure.query(async () => {
+      try {
+        const datasetDir = '/home/ubuntu/skin_cancer_classifier_k230_page/dataset_incremental';
+        const benignoDir = join(datasetDir, 'BENIGNO');
+        const malignoDir = join(datasetDir, 'MALIGNO');
+        
+        // Criar diretórios se não existirem
+        if (!existsSync(benignoDir)) mkdirSync(benignoDir, { recursive: true });
+        if (!existsSync(malignoDir)) mkdirSync(malignoDir, { recursive: true });
+        
+        // Contar imagens em cada diretório
+        const benignoFiles = readdirSync(benignoDir).filter((f: string) => f.endsWith('.png') || f.endsWith('.jpg'));
+        const malignoFiles = readdirSync(malignoDir).filter((f: string) => f.endsWith('.png') || f.endsWith('.jpg'));
+        
+        const totalBenigno = benignoFiles.length;
+        const totalMaligno = malignoFiles.length;
+        const totalImages = totalBenigno + totalMaligno;
+        
+        // Distribuição temporal (últimos 7 dias)
+        const temporalData: any[] = [];
+        const now = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(date.getDate() - i);
+          const dateStr = date.toISOString().split('T')[0];
+          
+          const benignoCount = benignoFiles.filter((f: string) => {
+            const filePath = join(benignoDir, f);
+            const stats = statSync(filePath);
+            const fileDate = stats.mtime.toISOString().split('T')[0];
+            return fileDate === dateStr;
+          }).length;
+          
+          const malignoCount = malignoFiles.filter((f: string) => {
+            const filePath = join(malignoDir, f);
+            const stats = statSync(filePath);
+            const fileDate = stats.mtime.toISOString().split('T')[0];
+            return fileDate === dateStr;
+          }).length;
+          
+          temporalData.push({
+            date: dateStr,
+            BENIGNO: benignoCount,
+            MALIGNO: malignoCount
+          });
+        }
+        
+        return {
+          total_images: totalImages,
+          total_by_class: {
+            BENIGNO: totalBenigno,
+            MALIGNO: totalMaligno
+          },
+          temporal_distribution: temporalData,
+          duplicates_detected: 0, // TODO: Implementar detecção de duplicatas
+          retraining_status: 'idle',
+          last_retrain: null
+        };
+        
+      } catch (error: any) {
+        console.error("[DATASET] Erro ao obter estatísticas:", error);
+        throw new Error(`Erro ao obter estatísticas: ${error.message}`);
+      }
+    }),
+    
+    triggerRetrain: publicProcedure.mutation(async () => {
+      try {
+        // TODO: Implementar retreinamento real
+        // Por enquanto, apenas retorna sucesso
+        console.log("[DATASET] Retreinamento solicitado");
+        
+        return {
+          success: true,
+          message: "Retreinamento iniciado (simulado)"
+        };
+        
+      } catch (error: any) {
+        console.error("[DATASET] Erro ao iniciar retreinamento:", error);
+        throw new Error(`Erro ao iniciar retreinamento: ${error.message}`);
+      }
+    }),
   }),
 });
 
