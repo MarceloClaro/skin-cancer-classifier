@@ -45,8 +45,8 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const GEMINI_API_KEY_PRIMARY = "AIzaSyBkD7xM8hcZ-3h1dNUumF6D401iXUVuWEs"; // Chave funcional
         const GEMINI_API_KEY_FALLBACK = "AIzaSyCMsKvLqtAd6Sr4FvZ_ZrTIzZInMgwhVK0";
-        const GEMINI_MODEL = "gemini-pro-latest";
-        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+        const GEMINI_MODEL = "models/gemini-2.5-flash"; // Modelo estável e rápido (prefixo obrigatório)
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/${GEMINI_MODEL}:generateContent`;
 
         const PROJECT_CONTEXT = `Você é um assistente técnico especializado no projeto "Classificador de Câncer de Pele K230". 
 Suas respostas devem ser técnicas, precisas e baseadas nas seguintes informações do projeto:
@@ -67,6 +67,10 @@ Suas respostas devem ser técnicas, precisas e baseadas nas seguintes informaç�
 Responda de forma técnica, didática e motivadora para pesquisadores e investidores.`;
 
         try {
+          console.log("[CHAT] Recebida mensagem:", input.message);
+          console.log("[CHAT] Session ID:", input.sessionId);
+          console.log("[CHAT] Tentando API Gemini com chave primária...");
+          
           // Tentar com chave primária
           let response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_PRIMARY}`, {
             method: "POST",
@@ -83,15 +87,20 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
                   ]
                 }
               ],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1024,
-              }
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048, // Aumentado para evitar MAX_TOKENS
+            topP: 0.95,
+            topK: 40,
+          }
             })
           });
 
+          console.log("[CHAT] Resposta primária - Status:", response.status, response.statusText);
+          
           // Se falhar, tentar com chave fallback
           if (!response.ok) {
+            console.log("[CHAT] Chave primária falhou, tentando fallback...");
             response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_FALLBACK}`, {
               method: "POST",
               headers: {
@@ -109,18 +118,45 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
                 ],
                 generationConfig: {
                   temperature: 0.7,
-                  maxOutputTokens: 1024,
+                  maxOutputTokens: 2048,
+                  topP: 0.95,
+                  topK: 40,
                 }
               })
             });
           }
 
           if (!response.ok) {
-            throw new Error("Erro ao comunicar com a API Gemini");
+            const errorText = await response.text();
+            console.error("[CHAT] Erro na API Gemini:", response.status, errorText);
+            throw new Error(`Erro ao comunicar com a API Gemini: ${response.status}`);
           }
 
           const data = await response.json();
-          const botResponse = data.candidates[0].content.parts[0].text;
+          console.log("[CHAT] Resposta da API:", JSON.stringify(data, null, 2));
+          
+          // Verificar estrutura da resposta
+          if (!data.candidates || !data.candidates[0]) {
+            console.error("[CHAT] Formato de resposta inválido (sem candidates):", data);
+            throw new Error("Formato de resposta inválido da API Gemini");
+          }
+
+          const candidate = data.candidates[0];
+          
+          // Verificar se há conteúdo na resposta
+          if (!candidate.content || !candidate.content.parts || !candidate.content.parts[0]) {
+            console.error("[CHAT] Resposta sem conteúdo (finishReason:", candidate.finishReason, ")");
+            
+            // Se atingiu MAX_TOKENS, retornar mensagem informativa
+            if (candidate.finishReason === "MAX_TOKENS") {
+              throw new Error("A resposta foi muito longa. Por favor, faça uma pergunta mais específica.");
+            }
+            
+            throw new Error("A API não retornou conteúdo. Tente novamente.");
+          }
+          
+          const botResponse = candidate.content.parts[0].text;
+          console.log("[CHAT] Resposta do bot:", botResponse);
 
           // Salvar conversa no banco de dados
           await saveChatConversation({
@@ -130,9 +166,10 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
           });
 
           return { response: botResponse };
-        } catch (error) {
-          console.error("Erro ao processar mensagem:", error);
-          throw new Error("Erro ao processar sua mensagem. Por favor, tente novamente.");
+        } catch (error: any) {
+          console.error("[CHAT] ERRO COMPLETO:", error);
+          console.error("[CHAT] Stack trace:", error.stack);
+          throw new Error(`Erro ao processar sua mensagem: ${error.message}`);
         }
       }),
     saveConversation: publicProcedure

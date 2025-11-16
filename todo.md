@@ -69,3 +69,10 @@
 - [x] Testar endpoint tRPC manualmente
 - [x] Identificar problema na comunicação frontend-backend (imports faltantes)
 - [x] Corrigir e validar funcionamento completo
+
+## Bug Urgente - Chat Bot Falhando no Processamento
+
+- [ ] Adicionar logs detalhados no backend (server/routers.ts)
+- [ ] Testar chat bot e capturar logs de erro completos
+- [ ] Identificar causa raiz do erro na API Gemini
+- [ ] Corrigir problema e validar funcionamento
