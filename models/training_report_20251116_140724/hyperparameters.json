@@ -1,0 +1,22 @@
+{
+  "Dataset": "/home/ubuntu/skin_dataset",
+  "Total de Imagens": 40,
+  "Imagens de Treino": 32,
+  "Imagens de Valida\u00e7\u00e3o": 8,
+  "Classes": "MALIGNO, BENIGNO",
+  "Tamanho da Imagem": "224x224",
+  "Batch Size": 8,
+  "\u00c9pocas Fase 1": 10,
+  "\u00c9pocas Fase 2": 20,
+  "Learning Rate Fase 1": 0.001,
+  "Learning Rate Fase 2": 0.0001,
+  "Arquitetura Base": "MobileNetV2",
+  "Pesos Pr\u00e9-treinados": "ImageNet",
+  "Data Augmentation": "Sim (rotation, shift, zoom, flip)",
+  "Dropout": "0.5, 0.3",
+  "Otimizador": "Adam",
+  "Loss Function": "sparse_categorical_crossentropy",
+  "M\u00e9tricas": "accuracy",
+  "Early Stopping": "Sim (patience=5)",
+  "Reduce LR": "Sim (patience=3, factor=0.5)"
+}

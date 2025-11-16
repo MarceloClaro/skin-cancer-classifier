@@ -249,3 +249,37 @@
 - [ ] Verificar performance (tempo de resposta)
 - [ ] Confirmar logs auditáveis funcionando
 - [ ] Validar salvamento no dataset incremental
+
+
+## Correção e Melhoria do Script de Treinamento
+
+### Análise do appv3.py
+- [x] Baixar e analisar appv3.py do GitHub
+- [x] Identificar todas as visualizações implementadas
+- [x] Listar parâmetros e métricas exibidos
+- [x] Documentar estrutura de data augmentation
+
+### Visualizações de Data Augmentation
+- [x] Criar função para gerar exemplos de augmentation
+- [x] Visualizar grid 3x6 de imagens originais vs augmentadas
+- [x] Salvar exemplos de augmentation como imagem (1.8MB)
+- [x] Documentar transformações aplicadas (rotation, shift, zoom, flip)
+
+### Tabela de Parâmetros e Indicadores
+- [x] Criar tabela completa de hiperparâmetros (129KB)
+- [x] Adicionar indicadores de performance (acurácia: 87.5%, AUC: 0.88)
+- [x] Gerar gráficos de métricas por época (Fase 1 + Fase 2)
+- [x] Salvar tabela como imagem e JSON
+
+### Visualização de Predições
+- [x] Implementar função para encontrar melhores predições
+- [x] Implementar função para encontrar piores predições
+- [x] Criar grid visual com imagens + predições + ground truth
+- [x] Salvar visualizações como imagens (best: 1.8MB, worst: 275KB)
+- [ ] Adicionar Grad-CAM nas visualizações
+
+### Testes e Validação
+- [x] Executar treinamento completo (Acurácia: 87.5%, AUC: 0.88)
+- [x] Validar todas as visualizações geradas (7 arquivos PNG + 2 JSON)
+- [x] Verificar qualidade dos gráficos (resolução 150 DPI)
+- [ ] Documentar processo completo
