@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Gerador de Grad-CAM usando pytorch-grad-cam
-Converte modelo Keras/TensorFlow para PyTorch e gera visualizações
+Gerador de Grad-CAM robusto para modelos Sequential
+Implementação simplificada sem criar novos modelos
 """
 
 import os
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class GradCAMGenerator:
     """
-    Gerador de Grad-CAM robusto usando implementação alternativa
+    Gerador de Grad-CAM robusto
     """
     
     def __init__(self, model):
@@ -52,11 +52,12 @@ class GradCAMGenerator:
             last_conv_layer_name = self._get_last_conv_layer()
             logger.info(f"Usando camada: {last_conv_layer_name}")
             
-            # Criar modelo Grad-CAM
-            grad_model = self._create_grad_model(last_conv_layer_name)
+            # Computar heatmap usando GradientTape
+            heatmap = self._compute_heatmap_with_tape(img_array, last_conv_layer_name)
             
-            # Computar heatmap
-            heatmap = self._compute_heatmap(grad_model, img_array)
+            if heatmap is None:
+                logger.warning("Heatmap não gerado, retornando imagem original")
+                return self._fallback_image(image_path)
             
             # Sobrepor heatmap na imagem original
             superimposed = self._superimpose_heatmap(image_path, heatmap)
@@ -117,86 +118,102 @@ class GradCAMGenerator:
         
         raise ValueError("Nenhuma camada convolucional encontrada")
     
-    def _create_grad_model(self, last_conv_layer_name: str):
+    def _compute_heatmap_with_tape(self, img_array: np.ndarray, last_conv_layer_name: str) -> np.ndarray:
         """
-        Cria modelo para computar gradientes
+        Computa heatmap Grad-CAM usando GradientTape diretamente
         
         Args:
+            img_array: Imagem preprocessada
             last_conv_layer_name: Nome da última camada conv
             
         Returns:
-            Modelo Keras
+            Heatmap normalizado ou None se falhar
         """
-        # Obter base model (MobileNetV2)
-        base_model = None
-        for layer in self.model.layers:
-            if 'mobilenetv2' in layer.name.lower():
-                base_model = layer
-                break
-        
-        if base_model is None:
-            raise ValueError("MobileNetV2 base model não encontrado")
-        
-        # Obter camada convolucional
-        conv_layer = base_model.get_layer(last_conv_layer_name)
-        
-        # Criar modelo que retorna output da conv layer e predição final
-        grad_model = keras.Model(
-            inputs=self.model.input,
-            outputs=[conv_layer.output, self.model.output]
-        )
-        
-        return grad_model
-    
-    def _compute_heatmap(self, grad_model, img_array: np.ndarray) -> np.ndarray:
-        """
-        Computa heatmap Grad-CAM
-        
-        Args:
-            grad_model: Modelo para gradientes
-            img_array: Imagem preprocessada
+        try:
+            # Obter base model (MobileNetV2)
+            base_model = None
+            for layer in self.model.layers:
+                if 'mobilenetv2' in layer.name.lower():
+                    base_model = layer
+                    break
             
-        Returns:
-            Heatmap normalizado
-        """
-        # Converter para tensor
-        img_tensor = tf.convert_to_tensor(img_array)
-        
-        # Computar gradientes
-        with tf.GradientTape() as tape:
-            tape.watch(img_tensor)
-            conv_outputs, predictions = grad_model(img_tensor, training=False)
+            if base_model is None:
+                logger.error("MobileNetV2 base model não encontrado")
+                return None
             
-            # Para classificação binária com sigmoid
-            if predictions.shape[-1] == 1:
-                class_channel = predictions[:, 0]
-            else:
-                # Para classificação multiclasse
-                class_channel = predictions[:, tf.argmax(predictions[0])]
-        
-        # Gradientes da classe predita em relação aos outputs da conv layer
-        grads = tape.gradient(class_channel, conv_outputs)
-        
-        # Pooling global dos gradientes
-        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-        
-        # Multiplicar cada canal pelo seu peso (gradiente)
-        conv_outputs = conv_outputs[0]
-        pooled_grads = pooled_grads.numpy()
-        conv_outputs = conv_outputs.numpy()
-        
-        for i in range(pooled_grads.shape[-1]):
-            conv_outputs[:, :, i] *= pooled_grads[i]
-        
-        # Média dos canais ponderados
-        heatmap = np.mean(conv_outputs, axis=-1)
-        
-        # ReLU e normalização
-        heatmap = np.maximum(heatmap, 0)
-        if heatmap.max() > 0:
-            heatmap /= heatmap.max()
-        
-        return heatmap
+            # Obter camada convolucional
+            try:
+                conv_layer = base_model.get_layer(last_conv_layer_name)
+            except:
+                logger.error(f"Camada {last_conv_layer_name} não encontrada")
+                return None
+            
+            # Criar modelo Grad-CAM que retorna conv_output E predição final
+            # Usar base_model como sub-modelo
+            grad_model = keras.Model(
+                inputs=base_model.input,
+                outputs=[conv_layer.output, base_model.output]
+            )
+            
+            # Converter para tensor
+            img_tensor = tf.convert_to_tensor(img_array)
+            
+            # Computar gradientes
+            with tf.GradientTape() as tape:
+                # Observar tensor de entrada
+                tape.watch(img_tensor)
+                
+                # Forward pass: obter conv_output e features do base_model
+                conv_outputs, base_features = grad_model(img_tensor, training=False)
+                
+                # Passar features do base_model pelo resto do modelo (pooling + dense)
+                # Aplicar camadas manualmente
+                x = base_features
+                for layer in self.model.layers[1:]:  # Pular base_model (layer 0)
+                    x = layer(x, training=False)
+                predictions = x
+                
+                # Para classificação binária com sigmoid
+                if predictions.shape[-1] == 1:
+                    class_channel = predictions[:, 0]
+                else:
+                    # Para classificação multiclasse
+                    class_channel = predictions[:, tf.argmax(predictions[0])]
+            
+            # Gradientes da classe predita em relação aos outputs da conv layer
+            grads = tape.gradient(class_channel, conv_outputs)
+            
+            if grads is None:
+                logger.error("Gradientes não computados")
+                logger.error(f"class_channel shape: {class_channel.shape}")
+                logger.error(f"conv_outputs shape: {conv_outputs.shape}")
+                return None
+            
+            # Pooling global dos gradientes
+            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+            
+            # Multiplicar cada canal pelo seu peso (gradiente)
+            conv_outputs = conv_outputs[0].numpy()
+            pooled_grads = pooled_grads.numpy()
+            
+            for i in range(pooled_grads.shape[-1]):
+                conv_outputs[:, :, i] *= pooled_grads[i]
+            
+            # Média dos canais ponderados
+            heatmap = np.mean(conv_outputs, axis=-1)
+            
+            # ReLU e normalização
+            heatmap = np.maximum(heatmap, 0)
+            if heatmap.max() > 0:
+                heatmap /= heatmap.max()
+            
+            logger.info(f"Heatmap gerado: shape={heatmap.shape}, min={heatmap.min():.3f}, max={heatmap.max():.3f}")
+            return heatmap
+            
+        except Exception as e:
+            logger.error(f"Erro ao computar heatmap: {e}")
+            logger.exception(e)
+            return None
     
     def _superimpose_heatmap(self, image_path: str, heatmap: np.ndarray) -> np.ndarray:
         """
@@ -216,16 +233,17 @@ class GradCAMGenerator:
         # Redimensionar heatmap para tamanho original
         heatmap_resized = cv2.resize(heatmap, (img_original.shape[1], img_original.shape[0]))
         
-        # Converter heatmap para RGB usando colormap
+        # Converter heatmap para RGB usando colormap JET
         heatmap_colored = cv2.applyColorMap(
             (heatmap_resized * 255).astype(np.uint8),
             cv2.COLORMAP_JET
         )
         heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
         
-        # Sobrepor com transparência
+        # Sobrepor com transparência (60% original, 40% heatmap)
         superimposed = cv2.addWeighted(img_original, 0.6, heatmap_colored, 0.4, 0)
         
+        logger.info(f"Heatmap sobreposto: shape={superimposed.shape}")
         return superimposed
     
     def _to_base64(self, image: np.ndarray) -> str:
@@ -238,7 +256,7 @@ class GradCAMGenerator:
         Returns:
             String base64
         """
-        pil_img = Image.fromarray(image)
+        pil_img = Image.fromarray(image.astype(np.uint8))
         buffer = BytesIO()
         pil_img.save(buffer, format='PNG')
         return base64.b64encode(buffer.getvalue()).decode('utf-8')

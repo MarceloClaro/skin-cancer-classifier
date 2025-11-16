@@ -537,3 +537,13 @@
 - [x] Corrigir exibição do relatório no SkinClassifier.tsx (result.diagnosis.analysis)
 - [x] Adicionar detecção dinâmica do provider (Groq/Gemini/CNN)
 - [x] Testar fluxo completo via API (SUCESSO: Grad-CAM 153KB + Relatório Groq)
+
+
+## Correção Visual Grad-CAM
+
+- [x] Investigar por que gradcam_generator.py estava retornando imagem original (gradientes = None)
+- [x] Identificar erro "layer sequential has never been called" causando fallback
+- [x] Corrigir _compute_heatmap_with_tape() para aplicar camadas manualmente após base_model
+- [x] Implementar geração de heatmap com GradientTape rastreando corretamente
+- [x] Testar visualmente heatmap sobreposto (SUCESSO: vermelho/amarelo nas bordas)
+- [x] Validar cores do heatmap (vermelho = alta ativação, azul = baixa) - CORRETO
