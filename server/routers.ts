@@ -207,105 +207,98 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
         generateDiagnosis: z.boolean().default(true),
       }))
       .mutation(async ({ input }) => {
+        const startTime = Date.now();
+        let tempImagePath: string | null = null;
+        
         try {
+          console.log("[BINARY_CLASSIFIER] ========================================");
           console.log("[BINARY_CLASSIFIER] Iniciando classificação binária...");
+          console.log("[BINARY_CLASSIFIER] Timestamp:", new Date().toISOString());
+          console.log("[BINARY_CLASSIFIER] Generate Diagnosis:", input.generateDiagnosis);
           
           // Salvar imagem temporariamente
-          const tempImagePath = join(tmpdir(), `skin_binary_${Date.now()}.png`);
+          tempImagePath = join(tmpdir(), `skin_binary_${Date.now()}.png`);
+          console.log("[BINARY_CLASSIFIER] Salvando imagem em:", tempImagePath);
+          
           const imageBuffer = Buffer.from(
             input.imageBase64.replace(/^data:image\/\w+;base64,/, ""),
             "base64"
           );
           await writeFile(tempImagePath, imageBuffer);
+          console.log("[BINARY_CLASSIFIER] Imagem salva (", imageBuffer.length, "bytes )");
           
-          // Executar classificação Python com modelo treinado
-          const pythonScript = `
-import sys
-import json
-sys.path.append('/home/ubuntu/skin_cancer_classifier_k230_page/server')
-from binary_skin_classifier import get_binary_classifier
-
-classifier = get_binary_classifier()
-result = classifier.predict('${tempImagePath}')
-print(json.dumps(result))
-`;
+          // Executar wrapper Python robusto
+          const wrapperPath = '/home/ubuntu/skin_cancer_classifier_k230_page/server/classify_wrapper.py';
+          const command = `python3 ${wrapperPath} "${tempImagePath}" true ${input.generateDiagnosis}`;
           
-          const scriptPath = join(tmpdir(), `classify_binary_${Date.now()}.py`);
-          await writeFile(scriptPath, pythonScript);
+          console.log("[BINARY_CLASSIFIER] Executando comando:", command);
+          console.log("[BINARY_CLASSIFIER] Logs detalhados em: /tmp/skin_classifier.log");
           
-          const { stdout } = await execAsync(`python3 ${scriptPath}`);
-          const classificationResult = JSON.parse(stdout.trim());
+          const { stdout, stderr } = await execAsync(command, {
+            timeout: 120000, // 2 minutos
+            maxBuffer: 10 * 1024 * 1024 // 10MB
+          });
           
-          console.log("[BINARY_CLASSIFIER] Classificação:", classificationResult);
-          
-          // Gerar Grad-CAM
-          const gradcamScript = `
-import sys
-sys.path.append('/home/ubuntu/skin_cancer_classifier_k230_page/server')
-from binary_skin_classifier import get_binary_classifier
-
-classifier = get_binary_classifier()
-gradcam_base64 = classifier.generate_gradcam('${tempImagePath}')
-print(gradcam_base64)
-`;
-          
-          const gradcamScriptPath = join(tmpdir(), `gradcam_binary_${Date.now()}.py`);
-          await writeFile(gradcamScriptPath, gradcamScript);
-          
-          const { stdout: gradcamOutput } = await execAsync(`python3 ${gradcamScriptPath}`);
-          const gradcamImage = gradcamOutput.trim();
-          
-          console.log("[BINARY_CLASSIFIER] Grad-CAM gerado");
-          
-          // Gerar diagnóstico com Gemini se solicitado
-          let diagnosis = null;
-          if (input.generateDiagnosis) {
-            const diagnosisScript = `
-import sys
-import json
-sys.path.append('/home/ubuntu/skin_cancer_classifier_k230_page/server')
-from diagnosis_generator import get_diagnosis_generator
-
-result = ${JSON.stringify(classificationResult)}
-generator = get_diagnosis_generator()
-diagnosis = generator.generate_diagnosis(result)
-print(json.dumps(diagnosis))
-`;
-            
-            const diagnosisScriptPath = join(tmpdir(), `diagnosis_binary_${Date.now()}.py`);
-            await writeFile(diagnosisScriptPath, diagnosisScript);
-            
-            try {
-              const { stdout: diagnosisOutput } = await execAsync(`python3 ${diagnosisScriptPath}`);
-              diagnosis = JSON.parse(diagnosisOutput.trim());
-              console.log("[BINARY_CLASSIFIER] Diagnóstico gerado");
-            } catch (diagError) {
-              console.error("[BINARY_CLASSIFIER] Erro ao gerar diagnóstico:", diagError);
-              diagnosis = {
-                success: false,
-                error: "Erro ao gerar diagnóstico",
-                diagnosis: "Diagnóstico não disponível"
-              };
-            }
-            
-            // Limpar arquivo do diagnóstico
-            await unlink(diagnosisScriptPath).catch(() => {});
+          if (stderr) {
+            console.log("[BINARY_CLASSIFIER] Python stderr:", stderr);
           }
           
-          // Limpar arquivos temporários
+          console.log("[BINARY_CLASSIFIER] Resposta Python recebida (", stdout.length, "bytes )");
+          
+          // Parse resultado
+          let result;
+          try {
+            result = JSON.parse(stdout);
+          } catch (parseError: any) {
+            console.error("[BINARY_CLASSIFIER] Erro ao parsear JSON:", parseError.message);
+            console.error("[BINARY_CLASSIFIER] stdout:", stdout.substring(0, 500));
+            throw new Error(`Erro ao parsear resposta Python: ${parseError.message}`);
+          }
+          
+          // Verificar sucesso
+          if (!result.success) {
+            console.error("[BINARY_CLASSIFIER] Classificação falhou:", result.error);
+            throw new Error(`Classificação falhou: ${result.error.message}`);
+          }
+          
+          console.log("[BINARY_CLASSIFIER] Classificação:", result.classification.class, "(", result.classification.confidence, ")");
+          console.log("[BINARY_CLASSIFIER] Grad-CAM:", result.gradcam ? "Gerado" : "Não gerado");
+          console.log("[BINARY_CLASSIFIER] Diagnóstico:", result.diagnosis ? "Gerado" : "Não gerado");
+          
+          // Limpar arquivo temporário
           await unlink(tempImagePath).catch(() => {});
-          await unlink(scriptPath).catch(() => {});
-          await unlink(gradcamScriptPath).catch(() => {});
+          
+          const duration = Date.now() - startTime;
+          console.log("[BINARY_CLASSIFIER] Classificação concluída em", duration, "ms");
+          console.log("[BINARY_CLASSIFIER] ========================================");
           
           return {
             success: true,
-            classification: classificationResult,
-            gradcam: gradcamImage,
-            diagnosis: diagnosis,
+            classification: result.classification,
+            gradcam: result.gradcam,
+            diagnosis: result.diagnosis,
+            metadata: {
+              duration_ms: duration,
+              timestamp: new Date().toISOString()
+            }
           };
           
         } catch (error: any) {
-          console.error("[BINARY_CLASSIFIER] Erro:", error);
+          const duration = Date.now() - startTime;
+          console.error("[BINARY_CLASSIFIER] ========================================");
+          console.error("[BINARY_CLASSIFIER] ERRO FATAL");
+          console.error("[BINARY_CLASSIFIER] Tipo:", error.constructor.name);
+          console.error("[BINARY_CLASSIFIER] Mensagem:", error.message);
+          console.error("[BINARY_CLASSIFIER] Stack:", error.stack);
+          console.error("[BINARY_CLASSIFIER] Duração até erro:", duration, "ms");
+          console.error("[BINARY_CLASSIFIER] Verifique logs em: /tmp/skin_classifier.log");
+          console.error("[BINARY_CLASSIFIER] ========================================");
+          
+          // Limpar arquivo temporário
+          if (tempImagePath) {
+            await unlink(tempImagePath).catch(() => {});
+          }
+          
           throw new Error(`Erro na classificação binária: ${error.message}`);
         }
       }),

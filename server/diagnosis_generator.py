@@ -11,7 +11,10 @@ from typing import Dict, Any
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyCMsKvLqtAd6Sr4FvZ_ZrTIzZInMgwhVK0")
+# Usar chave do ambiente (injetada automaticamente pelo sistema)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+if not GEMINI_API_KEY:
+    logger.warning("GEMINI_API_KEY não encontrada no ambiente")
 GEMINI_MODEL = "models/gemini-2.5-flash"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/{GEMINI_MODEL}:generateContent"
 

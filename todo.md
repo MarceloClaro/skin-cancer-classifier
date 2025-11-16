@@ -108,3 +108,19 @@
 - [x] Atualizar frontend com badge de modelo treinado
 - [x] Testar classificador com modelo personalizado (MALIGNO 64.68%)
 - [ ] Documentar processo de treinamento e resultados
+
+
+## Correção de Erro na Análise de Lesões
+
+- [x] Implementar sistema de logs detalhado no backend (routers.ts)
+- [x] Adicionar logs no binary_skin_classifier.py
+- [x] Criar wrapper Python robusto (classify_wrapper.py)
+- [x] Verificar logs do servidor em tempo real
+- [x] Reproduzir erro com upload de imagem
+- [x] Analisar stack trace completo (SRE module mismatch)
+- [x] Identificar causa raiz: scripts temporários com módulos Python inconsistentes
+- [x] Implementar correção robusta: wrapper isolado com subprocess
+- [x] Corrigir busca de camada Grad-CAM (Conv_1 dentro de MobileNetV2)
+- [x] Adicionar tratamento de exceções apropriado
+- [x] Validar correção com múltiplos testes (Grad-CAM: 153.770 chars)
+- [x] Documentar solução e prevenção (TROUBLESHOOTING.md)

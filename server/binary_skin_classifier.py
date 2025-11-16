@@ -166,15 +166,22 @@ class BinarySkinClassifier:
             
             # Obter última camada convolucional
             last_conv_layer_name = self._get_last_conv_layer()
+            logger.info(f"Usando camada para Grad-CAM: {last_conv_layer_name}")
             
-            # Criar modelo Grad-CAM
+            # Obter base model e camada convolucional
+            base_model = self.model.get_layer('mobilenetv2_1.00_224')
+            conv_layer = base_model.get_layer(last_conv_layer_name)
+            logger.info(f"Camada obtida: {conv_layer.name} (shape: {conv_layer.output_shape})")
+            
+            # Criar modelo Grad-CAM que conecta input do modelo principal à saída da conv layer
             grad_model = keras.Model(
                 inputs=self.model.input,
                 outputs=[
-                    self.model.get_layer(last_conv_layer_name).output,
-                    self.model.output
+                    conv_layer.output,  # Saída da camada convolucional
+                    self.model.output   # Saída final do modelo
                 ]
             )
+            logger.info("Modelo Grad-CAM criado com sucesso")
             
             # Calcular gradientes
             with tf.GradientTape() as tape:
@@ -237,24 +244,31 @@ class BinarySkinClassifier:
         """
         Obtém nome da última camada convolucional
         """
-        # Para MobileNetV2 dentro de um Sequential
+        logger.info("Buscando última camada convolucional...")
+        logger.info(f"Camadas do modelo: {[layer.name for layer in self.model.layers]}")
+        
+        # Procurar MobileNetV2 base model
         base_model = None
         for layer in self.model.layers:
             if 'mobilenetv2' in layer.name.lower():
                 base_model = layer
+                logger.info(f"Base model encontrado: {layer.name}")
                 break
         
-        if base_model:
-            # Procurar última camada convolucional dentro do MobileNetV2
+        if base_model and hasattr(base_model, 'layers'):
+            # Listar camadas do MobileNetV2
+            logger.info(f"Camadas do MobileNetV2: {[l.name for l in base_model.layers[-10:]]}")
+            
+            # Procurar última camada convolucional
             for layer in reversed(base_model.layers):
-                if 'Conv' in layer.__class__.__name__ or 'conv' in layer.name:
-                    return f"{base_model.name}/{layer.name}"
+                layer_class = layer.__class__.__name__
+                if 'Conv' in layer_class:
+                    layer_name = layer.name
+                    logger.info(f"Última camada conv encontrada: {layer_name} (tipo: {layer_class})")
+                    return layer_name
         
-        # Fallback
-        for layer in reversed(self.model.layers):
-            if 'Conv' in layer.__class__.__name__:
-                return layer.name
-        
+        # Fallback: usar camada antes do pooling
+        logger.warning("Usando fallback: camada mobilenetv2_1.00_224")
         return 'mobilenetv2_1.00_224'
 
 
