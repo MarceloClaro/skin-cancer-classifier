@@ -437,3 +437,13 @@
 - [ ] Testar dashboard de métricas
 - [ ] Testar retreinamento automático
 - [ ] Publicar versão final
+
+
+## Menu de Navegação e Correções
+
+- [x] Investigar erro no classificador (OpenCV não instalado)
+- [x] Instalar opencv-python-headless
+- [x] Criar componente Header/Navbar global
+- [x] Adicionar links para: Classificador, Treinamento, Admin/Dataset, Admin/Retreinar
+- [x] Integrar menu em todas as páginas
+- [x] Testar navegação completa

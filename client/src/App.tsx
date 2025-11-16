@@ -9,6 +9,8 @@ import Home from "./pages/Home";
 import SkinClassifier from "./pages/SkinClassifier";
 import TrainingVisualization from "./pages/TrainingVisualization";
 import RetrainingInterface from "./pages/RetrainingInterface";
+import AdminDataset from "./pages/AdminDataset";
+import Header from "./components/Header";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -18,6 +20,7 @@ function Router() {
       <Route path={"/classificador"} component={SkinClassifier} />
       <Route path={"/treinamento"} component={TrainingVisualization} />
       <Route path={"/admin/retreinar"} component={RetrainingInterface} />
+      <Route path={"/admin/dataset"} component={AdminDataset} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -41,6 +44,7 @@ function App() {
           <ClientOnly>
             <Toaster />
           </ClientOnly>
+          <Header />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
