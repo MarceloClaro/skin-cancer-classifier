@@ -15,3 +15,10 @@
 - [x] Animações e micro-interações
 - [x] Integração de imagens do K230
 - [x] Seção de download do framework
+
+## Novas Features Solicitadas
+
+- [x] Formulário de contato para pesquisadores e investidores
+- [x] Chat flutuante com bot técnico
+- [x] Integração com API Gemini para respostas automáticas
+- [x] Sistema de conhecimento sobre o projeto para o bot

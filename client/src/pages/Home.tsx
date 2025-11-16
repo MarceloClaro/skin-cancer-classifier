@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import ChatBot from "@/components/ChatBot";
+import ContactForm from "@/components/ContactForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -36,6 +38,7 @@ export default function Home() {
             <a href="#results" className="text-sm font-medium hover:text-primary transition-colors">Resultados</a>
             <a href="#methodology" className="text-sm font-medium hover:text-primary transition-colors">Metodologia</a>
             <a href="#impact" className="text-sm font-medium hover:text-primary transition-colors">Impacto</a>
+            <a href="#contact" className="text-sm font-medium hover:text-primary transition-colors">Contato</a>
             <a href="#team" className="text-sm font-medium hover:text-primary transition-colors">Equipe</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -543,6 +546,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Contact Section */}
+      <section id="contact" className="section-padding bg-muted/30">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <Badge className="mb-4">Contato</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Interessado em Colaborar?
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Entre em contato para discutir colaborações em pesquisa, investimentos, 
+              implementação clínica ou parcerias institucionais.
+            </p>
+          </div>
+          <ContactForm />
+        </div>
+      </section>
+
       {/* Team Section */}
       <section id="team" className="section-padding">
         <div className="container">
@@ -582,6 +602,9 @@ export default function Home() {
           </Card>
         </div>
       </section>
+
+      {/* ChatBot */}
+      <ChatBot />
 
       {/* Footer */}
       <footer className="border-t bg-muted/30">
