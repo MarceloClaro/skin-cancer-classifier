@@ -62,3 +62,10 @@
 - [x] Executar teste e identificar erros
 - [x] Corrigir problemas de conexão/formato (modelo gemini-pro-latest + chave funcional)
 - [x] Verificar funcionamento do chat bot
+
+## Bug Crítico - Chat Bot Sem Resposta
+
+- [x] Verificar logs do servidor em tempo real
+- [x] Testar endpoint tRPC manualmente
+- [x] Identificar problema na comunicação frontend-backend (imports faltantes)
+- [x] Corrigir e validar funcionamento completo
