@@ -265,6 +265,73 @@ Este sistema é uma ferramenta auxiliar de estudo para residentes em dermatologi
             'vasc': 'Lesões Vasculares'
         }
         return names.get(class_key, class_key)
+    
+    def generate_diagnosis_binary(self, classification_result: str, confidence: float, image_path: str = None, gradcam_base64: str = None) -> Dict[str, Any]:
+        """
+        Gera diagnóstico para classificação binária (BENIGNO/MALIGNO)
+        
+        Args:
+            classification_result: BENIGNO ou MALIGNO
+            confidence: Confiança da predição (0-1)
+            image_path: Caminho da imagem (opcional)
+            gradcam_base64: Grad-CAM em base64 (opcional)
+        
+        Returns:
+            Dict com diagnóstico gerado
+        """
+        # Gerar diagnóstico de fallback (sem Gemini Vision)
+        risk_level = "ALTO" if classification_result == "MALIGNO" and confidence > 0.7 else \
+                     "MODERADO" if confidence > 0.5 else "BAIXO"
+        
+        diagnosis_text = f"""## Relatório Diagnóstico Automatizado
+
+**⚠️ NOTA:** Análise multimodal com Gemini Vision indisponível. Relatório baseado apenas em classificação CNN.
+
+### 1. Resultado da Classificação
+
+- **Diagnóstico Principal:** Lesão {classification_result.title()}
+- **Confiança:** {confidence*100:.1f}%
+- **Nível de Risco:** {risk_level}
+
+### 2. Interpretação
+
+Esta lesão foi classificada como **provavelmente {classification_result.lower()}** pelo modelo de deep learning.
+
+**Achados Sugestivos:**
+- Padrões dermatoscópicos compatíveis com lesão {classification_result.lower()}
+- {'Alto risco de malignidade' if classification_result == 'MALIGNO' else 'Baixo risco de malignidade'}
+
+**Recomendações:**
+- {'Encaminhamento urgente para dermatologista' if classification_result == 'MALIGNO' else 'Acompanhamento dermatológico de rotina'}
+- {'Considerar biópsia para confirmação histopatológica' if classification_result == 'MALIGNO' else 'Monitorar mudanças (tamanho, cor, forma)'}
+- Fotodocumentação para comparação futura
+
+### 3. Diagnóstico Diferencial
+
+Consulte dermatologista para avaliação completa e diagnóstico diferencial apropriado.
+
+### 4. Limitações
+
+- Análise baseada apenas em classificação automática
+- Sem avaliação visual detalhada por especialista
+- Requer correlação com história clínica e exame físico
+
+### 5. Nota Importante
+
+Este sistema é uma ferramenta auxiliar de estudo para residentes em dermatologia. **NÃO substitui avaliação clínica presencial** por dermatologista qualificado. Sempre correlacione com achados clínicos e história do paciente.
+
+---
+*Gerado por: Sistema de Classificação de Câncer de Pele K230*
+*Modelo: MobileNetV2 treinado customizado*
+"""
+        
+        return {
+            "success": False,
+            "analysis": diagnosis_text,
+            "model": "fallback",
+            "multimodal": False,
+            "error": "Gemini Vision API indisponível"
+        }
 
 
 def get_diagnosis_generator():

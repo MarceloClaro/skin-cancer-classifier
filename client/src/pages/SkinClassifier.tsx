@@ -252,31 +252,33 @@ export default function SkinClassifier() {
                       </div>
                     </div>
 
-                    <div>
-                      <p className="text-sm text-green-800 font-medium mb-2">
-                        Probabilidades de Todas as Classes
-                      </p>
-                      <div className="space-y-2">
-                        {Object.entries(result.classification.probabilities)
-                          .sort(([, a]: any, [, b]: any) => b - a)
-                          .map(([cls, prob]: any) => (
-                            <div key={cls} className="flex items-center gap-2 text-sm">
-                              <div className="flex-1 bg-white rounded-full h-2 overflow-hidden">
-                                <div
-                                  className="bg-blue-500 h-full"
-                                  style={{ width: `${prob * 100}%` }}
-                                />
+                    {result.classification.probabilities && (
+                      <div>
+                        <p className="text-sm text-green-800 font-medium mb-2">
+                          Probabilidades de Todas as Classes
+                        </p>
+                        <div className="space-y-2">
+                          {Object.entries(result.classification.probabilities)
+                            .sort(([, a]: any, [, b]: any) => b - a)
+                            .map(([cls, prob]: any) => (
+                              <div key={cls} className="flex items-center gap-2 text-sm">
+                                <div className="flex-1 bg-white rounded-full h-2 overflow-hidden">
+                                  <div
+                                    className="bg-blue-500 h-full"
+                                    style={{ width: `${prob * 100}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-gray-700 w-32 truncate">
+                                  {cls}
+                                </span>
+                                <span className="text-xs font-medium text-gray-900 w-12 text-right">
+                                  {(prob * 100).toFixed(1)}%
+                                </span>
                               </div>
-                              <span className="text-xs text-gray-700 w-32 truncate">
-                                {cls}
-                              </span>
-                              <span className="text-xs font-medium text-gray-900 w-12 text-right">
-                                {(prob * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                          ))}
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 

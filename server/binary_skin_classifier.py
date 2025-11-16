@@ -63,7 +63,13 @@ class BinarySkinClassifier:
         
         logger.info(f"Carregando modelo de: {self.model_path}")
         self.model = keras.models.load_model(self.model_path)
-        logger.info("Modelo carregado com sucesso")
+        
+        # Inicializar modelo com predição dummy para definir inputs (necessário para Grad-CAM)
+        import numpy as np
+        dummy_input = np.zeros((1, 224, 224, 3), dtype=np.float32)
+        _ = self.model.predict(dummy_input, verbose=0)
+        
+        logger.info("Modelo carregado e inicializado com sucesso")
     
     def preprocess_image(self, image_path):
         """

@@ -234,9 +234,16 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
           console.log("[BINARY_CLASSIFIER] Executando comando:", command);
           console.log("[BINARY_CLASSIFIER] Logs detalhados em: /tmp/skin_classifier.log");
           
+          // Limpar variáveis de ambiente Python para evitar conflito com Python 3.13.8 do uv
+          const cleanEnv = { ...process.env };
+          delete cleanEnv.PYTHONPATH;
+          delete cleanEnv.PYTHONHOME;
+          delete cleanEnv.NUITKA_PYTHONPATH;
+          
           const { stdout, stderr } = await execAsync(command, {
             timeout: 300000, // 5 minutos (carregamento do modelo pode demorar)
-            maxBuffer: 10 * 1024 * 1024 // 10MB
+            maxBuffer: 10 * 1024 * 1024, // 10MB
+            env: cleanEnv // Usar ambiente limpo
           });
           
           if (stderr) {
@@ -261,7 +268,7 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
             throw new Error(`Classificação falhou: ${result.error.message}`);
           }
           
-          console.log("[BINARY_CLASSIFIER] Classificação:", result.classification.class, "(", result.classification.confidence, ")");
+          console.log("[BINARY_CLASSIFIER] Classificação:", result.class, "(", result.confidence, ")");
           console.log("[BINARY_CLASSIFIER] Grad-CAM:", result.gradcam ? "Gerado" : "Não gerado");
           console.log("[BINARY_CLASSIFIER] Diagnóstico:", result.diagnosis ? "Gerado" : "Não gerado");
           
@@ -274,9 +281,14 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
           
           return {
             success: true,
-            classification: result.classification,
+            classification: {
+              class: result.class,
+              confidence: result.confidence,
+              risk_level: result.risk_level
+            },
             gradcam: result.gradcam,
             diagnosis: result.diagnosis,
+            saved_to_dataset: result.saved_to_dataset,
             metadata: {
               duration_ms: duration,
               timestamp: new Date().toISOString()

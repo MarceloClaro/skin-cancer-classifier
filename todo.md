@@ -396,3 +396,21 @@
 - [x] Testar classificação com Python 3.11 (funcionando perfeitamente)
 - [x] Simplificar wrapper para funcionar com métodos disponíveis
 - [x] Documentar solução
+
+
+## Correção Definitiva: Isolamento Total do Python 3.11
+
+- [x] Investigar variáveis de ambiente (PYTHONPATH, PYTHONHOME, UV_PYTHON)
+- [x] Modificar routers.ts para limpar env antes de executar wrapper
+- [x] Usar env limpo para executar com ambiente isolado
+- [x] Testar wrapper com ambiente isolado (funcionando!)
+- [ ] Validar via interface web após publicação
+
+
+## Correções Finais para Sistema Completo
+
+- [x] Corrigir Grad-CAM: inicializar modelo com predição dummy
+- [x] Implementar generate_diagnosis_binary no DiagnosisGenerator
+- [ ] Adicionar visualizações de métricas de treinamento (próxima fase)
+- [ ] Testar todas funcionalidades
+- [ ] Publicar versão final
