@@ -1,0 +1,13 @@
+{
+  "filename": "BENIGNO_20251116_145846_fd034d6d.png",
+  "class": "BENIGNO",
+  "confidence": 0.7555533647537231,
+  "probabilities": {
+    "BENIGNO": 0.7555533647537231,
+    "MALIGNO": 0.24444666504859924
+  },
+  "timestamp": "2025-11-16T14:58:46.996989",
+  "user_id": null,
+  "image_hash": "fd034d6d0de7e836b9d7a3fb4d8859d0",
+  "original_path": "/tmp/test_lesion.png"
+}
