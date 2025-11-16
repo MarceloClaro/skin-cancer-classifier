@@ -43,9 +43,9 @@ export const appRouter = router({
         sessionId: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const GEMINI_API_KEY_PRIMARY = "AIzaSyCMsKvLqtAd6Sr4FvZ_ZrTIzZInMgwhVK0";
-        const GEMINI_API_KEY_FALLBACK = "AIzaSyDVc5QnyhxvwoY1gqniVZ2jNCzeOEf4Nnc";
-        const GEMINI_MODEL = "gemini-pro";
+        const GEMINI_API_KEY_PRIMARY = "AIzaSyBkD7xM8hcZ-3h1dNUumF6D401iXUVuWEs"; // Chave funcional
+        const GEMINI_API_KEY_FALLBACK = "AIzaSyCMsKvLqtAd6Sr4FvZ_ZrTIzZInMgwhVK0";
+        const GEMINI_MODEL = "gemini-pro-latest";
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
         const PROJECT_CONTEXT = `Você é um assistente técnico especializado no projeto "Classificador de Câncer de Pele K230". 

@@ -55,3 +55,10 @@
 
 - [x] Atualizar chave API do Gemini para AIzaSyCMsKvLqtAd6Sr4FvZ_ZrTIzZInMgwhVK0
 - [x] Testar chat bot com nova chave
+
+## Teste e Correção da API Gemini
+
+- [x] Criar script de teste da API Gemini
+- [x] Executar teste e identificar erros
+- [x] Corrigir problemas de conexão/formato (modelo gemini-pro-latest + chave funcional)
+- [x] Verificar funcionamento do chat bot
