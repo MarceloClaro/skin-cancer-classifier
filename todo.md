@@ -386,3 +386,13 @@
 - [x] Testar wrapper Python diretamente com imagem de teste
 - [x] Validar classificação via interface web
 - [x] Documentar solução final
+
+
+## Correção do Erro SRE Module Mismatch (Python 3.13.8 vs 3.11)
+
+- [x] Identificar que erro vem do Python 3.13.8 do uv
+- [x] Forçar uso de Python 3.11 do sistema (/usr/bin/python3.11)
+- [x] Atualizar endpoint tRPC para usar /usr/bin/python3.11 explicitamente
+- [x] Testar classificação com Python 3.11 (funcionando perfeitamente)
+- [x] Simplificar wrapper para funcionar com métodos disponíveis
+- [x] Documentar solução

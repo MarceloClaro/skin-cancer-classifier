@@ -274,3 +274,25 @@ def get_diagnosis_generator():
     if not hasattr(get_diagnosis_generator, '_instance'):
         get_diagnosis_generator._instance = DiagnosisGenerator()
     return get_diagnosis_generator._instance
+
+
+def generate_diagnosis(image_path: str, classification_result: str, confidence: float, gradcam_base64: str = None):
+    """
+    Função wrapper para gerar diagnóstico (compatibilidade com classify_wrapper.py)
+    
+    Args:
+        image_path: Caminho para a imagem
+        classification_result: Resultado da classificação (BENIGNO/MALIGNO)
+        confidence: Confiança da predição (0-1)
+        gradcam_base64: Grad-CAM em base64 (opcional)
+    
+    Returns:
+        dict: Diagnóstico gerado
+    """
+    generator = get_diagnosis_generator()
+    return generator.generate_diagnosis_binary(
+        classification_result=classification_result,
+        confidence=confidence,
+        image_path=image_path,
+        gradcam_base64=gradcam_base64
+    )
