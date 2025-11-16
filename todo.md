@@ -547,3 +547,15 @@
 - [x] Implementar geração de heatmap com GradientTape rastreando corretamente
 - [x] Testar visualmente heatmap sobreposto (SUCESSO: vermelho/amarelo nas bordas)
 - [x] Validar cores do heatmap (vermelho = alta ativação, azul = baixa) - CORRETO
+
+
+## Conversão para API HTTP Separada
+
+- [x] Criar servidor FastAPI (server/api_server.py) com endpoints /, /health, /classify
+- [x] Implementar endpoint POST /classify (recebe imageBase64, retorna classificação completa)
+- [x] Implementar CORS para permitir chamadas do frontend (* em dev, especificar em prod)
+- [x] Criar requirements.txt com dependências Python (FastAPI, TensorFlow, OpenCV, etc.)
+- [x] Atualizar frontend SkinClassifier.tsx para chamar API HTTP em vez de tRPC
+- [x] Criar arquivo render.yaml para deploy no Render (plano free)
+- [x] Testar API localmente (porta 8000, status: online)
+- [x] Criar README_API_DEPLOY.md com guia completo de deploy

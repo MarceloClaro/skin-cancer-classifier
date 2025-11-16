@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, Image as ImageIcon, AlertCircle, CheckCircle2, Brain, Activity } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+// import { trpc } from "@/lib/trpc"; // Removido: usando API HTTP direta
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
@@ -13,17 +13,29 @@ export default function SkinClassifier() {
   const [result, setResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const classifyMutation = trpc.skinClassifier.classifyBinary.useMutation({
-    onSuccess: (data) => {
-      setResult(data);
-      setIsAnalyzing(false);
-      toast.success("Análise concluída com sucesso!");
-    },
-    onError: (error) => {
-      setIsAnalyzing(false);
-      toast.error(`Erro na análise: ${error.message}`);
-    },
-  });
+  // Função para chamar API HTTP diretamente
+  const classifyImage = async (imageBase64: string, generateDiagnosis: boolean) => {
+    // URL da API (usar variável de ambiente ou localhost para dev)
+    const API_URL = import.meta.env.VITE_CLASSIFIER_API_URL || 'http://localhost:8000';
+    
+    const response = await fetch(`${API_URL}/classify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageBase64,
+        generateDiagnosis,
+      }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Erro na classificação');
+    }
+    
+    return response.json();
+  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -59,12 +71,13 @@ export default function SkinClassifier() {
 
     setIsAnalyzing(true);
     try {
-      await classifyMutation.mutateAsync({
-        imageBase64: selectedImage,
-        generateDiagnosis: true,
-      });
-    } catch (error) {
-      // Erro já tratado no onError
+      const data = await classifyImage(selectedImage, true);
+      setResult(data);
+      setIsAnalyzing(false);
+      toast.success("Análise concluída com sucesso!");
+    } catch (error: any) {
+      setIsAnalyzing(false);
+      toast.error(`Erro na análise: ${error.message}`);
     }
   };
 
@@ -233,7 +246,7 @@ export default function SkinClassifier() {
                         Diagnóstico Principal
                       </p>
                       <p className="text-2xl font-bold text-green-900">
-                        {result.classification.class_name}
+                        {result.class_name || result.classification?.class_name}
                       </p>
                     </div>
 
@@ -246,23 +259,23 @@ export default function SkinClassifier() {
                           <div
                             className="bg-green-600 h-full transition-all duration-500"
                             style={{
-                              width: `${result.classification.confidence * 100}%`,
+                              width: `${(result.confidence || result.classification?.confidence) * 100}%`,
                             }}
                           />
                         </div>
                         <span className="text-lg font-bold text-green-900">
-                          {(result.classification.confidence * 100).toFixed(1)}%
+                          {((result.confidence || result.classification?.confidence) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
 
-                    {result.classification.probabilities && (
+                    {(result.probabilities || result.classification?.probabilities) && (
                       <div>
                         <p className="text-sm text-green-800 font-medium mb-2">
                           Probabilidades de Todas as Classes
                         </p>
                         <div className="space-y-2">
-                          {Object.entries(result.classification.probabilities)
+                          {Object.entries(result.probabilities || result.classification?.probabilities || {})
                             .sort(([, a]: any, [, b]: any) => b - a)
                             .map(([cls, prob]: any) => (
                               <div key={cls} className="flex items-center gap-2 text-sm">
