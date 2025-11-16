@@ -50,3 +50,8 @@
 - [x] Corrigir chat bot que está retornando erro para todas as mensagens
 - [x] Verificar integração da API Gemini
 - [x] Testar comunicação com a API
+
+## Correção da Chave API Gemini
+
+- [x] Atualizar chave API do Gemini para AIzaSyCMsKvLqtAd6Sr4FvZ_ZrTIzZInMgwhVK0
+- [x] Testar chat bot com nova chave
