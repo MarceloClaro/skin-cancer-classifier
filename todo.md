@@ -559,3 +559,28 @@
 - [x] Criar arquivo render.yaml para deploy no Render (plano free)
 - [x] Testar API localmente (porta 8000, status: online)
 - [x] Criar README_API_DEPLOY.md com guia completo de deploy
+
+
+## Deploy Automático no Railway
+
+- [ ] Criar Dockerfile otimizado para API Python
+- [ ] Criar .dockerignore para reduzir tamanho da imagem
+- [ ] Instalar Railway CLI
+- [ ] Fazer login no Railway
+- [ ] Criar projeto Railway
+- [ ] Fazer deploy via railway up
+- [ ] Obter URL pública da API
+- [ ] Configurar VITE_CLASSIFIER_API_URL no frontend
+- [ ] Republicar frontend
+- [ ] Testar classificação em produção
+
+
+## Script Semi-Automático de Deploy
+
+- [x] Criar deploy.sh com verificação de Railway CLI (instala automaticamente se necessário)
+- [x] Implementar guia interativo de login (abre navegador)
+- [x] Adicionar criação automática de projeto Railway
+- [x] Configurar variáveis de ambiente automaticamente (GROQ_API_KEY, GEMINI_API_KEY, PORT)
+- [x] Fazer deploy via railway up --detach
+- [x] Capturar e exibir URL pública (salva em .railway_url)
+- [x] Criar README_DEPLOY.md com guia completo (método automático + manual)
