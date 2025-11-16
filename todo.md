@@ -414,3 +414,14 @@
 - [ ] Adicionar visualizações de métricas de treinamento (próxima fase)
 - [ ] Testar todas funcionalidades
 - [ ] Publicar versão final
+
+
+## Implementações Finais Solicitadas
+
+- [x] Corrigir caminho Python para produção (usar python3.11 sem caminho absoluto)
+- [x] Implementar save_to_dataset() com hash MD5 e timestamp
+- [x] Integrar Gemini Vision API para análise dermatoscópica detalhada
+- [x] Criar diretórios do dataset incremental
+- [ ] Testar salvamento de imagens no dataset incremental
+- [ ] Validar análise Gemini Vision com imagem + Grad-CAM
+- [ ] Publicar versão final

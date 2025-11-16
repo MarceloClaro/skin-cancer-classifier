@@ -109,15 +109,13 @@ def classify_image(image_path: str, generate_gradcam: bool = True, generate_diag
                 }
         
         # Salvar no dataset incremental
-        saved_info = {"success": False, "reason": "Método save_to_dataset não disponível"}
-        if hasattr(classifier, 'save_to_dataset'):
-            logger.info("Salvando imagem no dataset incremental...")
-            try:
-                saved_info = classifier.save_to_dataset(image_path, result['class'], result['confidence'])
-                logger.info(f"Salvamento: {saved_info}")
-            except Exception as e:
-                logger.warning(f"Erro ao salvar no dataset: {e}")
-                saved_info = {"success": False, "error": str(e)}
+        logger.info("Salvando imagem no dataset incremental...")
+        try:
+            saved_info = classifier.save_to_dataset(image_path, result['class'], result['confidence'])
+            logger.info(f"Salvamento: {saved_info}")
+        except Exception as e:
+            logger.warning(f"Erro ao salvar no dataset: {e}")
+            saved_info = {"success": False, "error": str(e)}
         
         duration = time.time() - start_time
         logger.info(f"=== CLASSIFICAÇÃO CONCLUÍDA ({duration:.2f}s) ===")

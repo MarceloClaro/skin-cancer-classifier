@@ -229,7 +229,7 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
           
           // Executar wrapper Python robusto
           const wrapperPath = '/home/ubuntu/skin_cancer_classifier_k230_page/server/classify_wrapper.py';
-          const command = `/usr/bin/python3.11 ${wrapperPath} "${tempImagePath}" true ${input.generateDiagnosis}`;
+          const command = `python3.11 ${wrapperPath} "${tempImagePath}" true ${input.generateDiagnosis}`;
           
           console.log("[BINARY_CLASSIFIER] Executando comando:", command);
           console.log("[BINARY_CLASSIFIER] Logs detalhados em: /tmp/skin_classifier.log");

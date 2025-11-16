@@ -254,6 +254,73 @@ class BinarySkinClassifier:
             img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             return f"data:image/png;base64,{img_base64}"
     
+    def save_to_dataset(self, image_path: str, predicted_class: str, confidence: float) -> dict:
+        """
+        Salva imagem no dataset incremental para retreinamento contínuo
+        
+        Args:
+            image_path: Caminho da imagem original
+            predicted_class: Classe predita (BENIGNO/MALIGNO)
+            confidence: Confiança da predição (0-1)
+        
+        Returns:
+            dict: Informações sobre o salvamento
+        """
+        import hashlib
+        import shutil
+        from datetime import datetime
+        
+        try:
+            # Diretório base do dataset incremental
+            dataset_base = '/home/ubuntu/skin_cancer_classifier_k230_page/dataset_incremental'
+            class_dir = os.path.join(dataset_base, predicted_class)
+            
+            # Criar diretório se não existir
+            os.makedirs(class_dir, exist_ok=True)
+            
+            # Calcular hash MD5 da imagem
+            with open(image_path, 'rb') as f:
+                file_hash = hashlib.md5(f.read()).hexdigest()
+            
+            # Verificar se imagem já existe (por hash)
+            existing_files = os.listdir(class_dir)
+            for existing_file in existing_files:
+                if file_hash in existing_file:
+                    logger.info(f"Imagem duplicada detectada (hash: {file_hash[:8]})")
+                    return {
+                        "success": False,
+                        "reason": "duplicate",
+                        "hash": file_hash,
+                        "existing_file": existing_file
+                    }
+            
+            # Gerar nome do arquivo com timestamp e hash
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            extension = os.path.splitext(image_path)[1]
+            new_filename = f"{predicted_class}_{timestamp}_{file_hash[:8]}{extension}"
+            destination_path = os.path.join(class_dir, new_filename)
+            
+            # Copiar imagem
+            shutil.copy2(image_path, destination_path)
+            
+            logger.info(f"Imagem salva no dataset: {destination_path}")
+            
+            return {
+                "success": True,
+                "path": destination_path,
+                "hash": file_hash,
+                "filename": new_filename,
+                "class": predicted_class,
+                "confidence": confidence
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro ao salvar no dataset: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
     def _get_last_conv_layer(self):
         """
         Obtém nome da última camada convolucional

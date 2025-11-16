@@ -266,6 +266,134 @@ Este sistema é uma ferramenta auxiliar de estudo para residentes em dermatologi
         }
         return names.get(class_key, class_key)
     
+    def _generate_with_gemini_vision(self, classification_result: str, confidence: float, image_path: str, gradcam_base64: str = None) -> Dict[str, Any]:
+        """
+        Gera diagnóstico usando Gemini Vision API
+        
+        Args:
+            classification_result: BENIGNO ou MALIGNO
+            confidence: Confiança da predição (0-1)
+            image_path: Caminho da imagem
+            gradcam_base64: Grad-CAM em base64 (opcional)
+        
+        Returns:
+            Dict com diagnóstico gerado
+        """
+        import base64
+        import json
+        
+        # Carregar e codificar imagem
+        with open(image_path, 'rb') as f:
+            image_data = base64.b64encode(f.read()).decode('utf-8')
+        
+        # Construir prompt dermatológico detalhado
+        prompt = f"""Você é um dermatologista especializado em dermatoscopia digital. Analise esta imagem de lesão cutânea e forneça um relatório diagnóstico detalhado.
+
+**Contexto:**
+- Classificação automática (CNN): {classification_result}
+- Confiança do modelo: {confidence*100:.1f}%
+
+**Tarefa:**
+Forneça uma análise dermatoscópica estruturada seguindo o formato abaixo:
+
+## 1. Achados Dermatoscópicos
+
+Descreva os achados visuais observados na imagem:
+- **Assimetria:** (presente/ausente, em quais eixos)
+- **Bordas:** (regulares/irregulares, bem/mal definidas)
+- **Cores:** (liste as cores presentes: marrom claro/escuro, preto, vermelho, azul, branco)
+- **Diâmetro:** (estimativa visual em mm, se possível)
+- **Estruturas dermatoscópicas:** (rede pigmentar, glóbulos, pontos, estrias, véu azul-esbranquiçado, etc.)
+
+## 2. Interpretação Clínica
+
+Com base nos achados dermatoscópicos:
+- A classificação automática ({classification_result}) é compatível com os achados visuais?
+- Quais características sugerem benignidade ou malignidade?
+- Pontuação ABCDE (se aplicável)
+
+## 3. Diagnóstico Diferencial
+
+Liste 3-5 diagnósticos diferenciais possíveis, em ordem de probabilidade:
+1. [Diagnóstico principal] - [justificativa]
+2. [Diagnóstico alternativo 1] - [justificativa]
+3. [Diagnóstico alternativo 2] - [justificativa]
+
+## 4. Recomendações
+
+- **Conduta imediata:** (acompanhamento, biópsia, excisão, etc.)
+- **Urgência:** (rotina, breve, urgente)
+- **Exames complementares:** (se necessários)
+- **Orientações ao paciente:**
+
+## 5. Notas Importantes
+
+- Limitações da análise por imagem
+- Necessidade de correlação clínica
+- Aviso sobre uso educacional
+
+Seja preciso, objetivo e use terminologia dermatológica adequada. Este relatório será usado por residentes em dermatologia para estudo.
+"""
+        
+        # Preparar payload para Gemini API
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": prompt
+                        },
+                        {
+                            "inline_data": {
+                                "mime_type": "image/png",
+                                "data": image_data
+                            }
+                        }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.4,
+                "topP": 0.95,
+                "topK": 40,
+                "maxOutputTokens": 2048
+            }
+        }
+        
+        # Chamar Gemini API
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        url = f"{self.api_url}?key={self.api_key}"
+        
+        logger.info("Chamando Gemini Vision API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        
+        if response.status_code != 200:
+            raise Exception(f"Gemini API retornou status {response.status_code}: {response.text}")
+        
+        result = response.json()
+        
+        # Extrair texto da resposta
+        if 'candidates' in result and len(result['candidates']) > 0:
+            candidate = result['candidates'][0]
+            if 'content' in candidate and 'parts' in candidate['content']:
+                analysis_text = candidate['content']['parts'][0]['text']
+                
+                logger.info("Análise Gemini Vision gerada com sucesso")
+                
+                return {
+                    "success": True,
+                    "analysis": analysis_text,
+                    "model": self.model,
+                    "multimodal": True,
+                    "classification": classification_result,
+                    "confidence": confidence
+                }
+        
+        raise Exception("Resposta inesperada da Gemini API")
+    
     def generate_diagnosis_binary(self, classification_result: str, confidence: float, image_path: str = None, gradcam_base64: str = None) -> Dict[str, Any]:
         """
         Gera diagnóstico para classificação binária (BENIGNO/MALIGNO)
@@ -279,7 +407,16 @@ Este sistema é uma ferramenta auxiliar de estudo para residentes em dermatologi
         Returns:
             Dict com diagnóstico gerado
         """
-        # Gerar diagnóstico de fallback (sem Gemini Vision)
+        import base64
+        
+        # Tentar usar Gemini Vision API se disponível
+        if self.api_key and image_path:
+            try:
+                return self._generate_with_gemini_vision(classification_result, confidence, image_path, gradcam_base64)
+            except Exception as e:
+                logger.warning(f"Erro ao usar Gemini Vision: {e}. Usando fallback.")
+        
+        # Fallback: diagnóstico sem Gemini Vision
         risk_level = "ALTO" if classification_result == "MALIGNO" and confidence > 0.7 else \
                      "MODERADO" if confidence > 0.5 else "BAIXO"
         
