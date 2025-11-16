@@ -9,8 +9,11 @@ interface Message {
   content: string;
 }
 
-const GEMINI_API_KEY = "AIzaSyDVc5QnyhxvwoY1gqniVZ2jNCzeOEf4Nnc";
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+// Chaves API Gemini (hardcoded para estudo)
+const GEMINI_API_KEY_PRIMARY = "AIzaSyDVc5QnyhxvwoY1gqniVZ2jNCzeOEf4Nnc";
+const GEMINI_API_KEY_FALLBACK = "AIzaSyBkD7xM8hcZ-3h1dNUumF6D401iXUVuWEs";
+const GEMINI_MODEL = "gemini-pro";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const PROJECT_CONTEXT = `Você é um assistente técnico especializado no projeto "Classificador de Câncer de Pele K230". 
 Suas respostas devem ser técnicas, precisas e baseadas nas seguintes informações do projeto:
@@ -106,7 +109,8 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      // Tentar com chave primária
+      let response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_PRIMARY}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,8 +132,34 @@ export default function ChatBot() {
         })
       });
 
+      // Se falhar, tentar com chave fallback
       if (!response.ok) {
-        throw new Error("Erro ao comunicar com a API");
+        console.warn("Chave primária falhou, tentando chave fallback...");
+        response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_FALLBACK}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `${PROJECT_CONTEXT}\n\nPergunta do usuário: ${input}`
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 1024,
+            }
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error("Erro ao comunicar com a API Gemini");
+        }
       }
 
       const data = await response.json();

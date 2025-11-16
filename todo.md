@@ -22,3 +22,8 @@
 - [x] Chat flutuante com bot técnico
 - [x] Integração com API Gemini para respostas automáticas
 - [x] Sistema de conhecimento sobre o projeto para o bot
+
+## Correções Necessárias
+
+- [x] Corrigir integração hardcoded da API Gemini no ChatBot
+- [x] Testar funcionamento do chat bot com API real
