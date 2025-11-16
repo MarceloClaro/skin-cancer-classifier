@@ -217,3 +217,35 @@
 - [ ] Adicionar tooltips explicativos
 - [ ] Implementar modo de visualização de resultados
 - [ ] Criar FAQ interativo
+
+
+## Análise e Correção Exaustiva de Erros
+
+### Análise de PDFs
+- [x] Analisar primeiro PDF de erro (NotFoundError: insertBefore)
+- [x] Analisar segundo PDF de erro (mesmo erro)
+- [x] Listar todos os erros identificados (hidratação React + SRE module mismatch)
+- [x] Priorizar erros por severidade (SRE module mismatch = crítico)
+
+### Testes Exaustivos
+- [x] Testar wrapper Python diretamente (SUCCESS)
+- [x] Testar classificação completa (predição + Grad-CAM + diagnóstico)
+- [x] Capturar logs detalhados de cada etapa
+- [x] Identificar pontos de falha (timeout de 120s insuficiente)
+- [ ] Testar upload de imagem via interface web
+- [ ] Testar com múltiplas imagens diferentes
+
+### Correções Sistemáticas
+- [x] Corrigir erro de hidratação React (adicionar imports useState/useRef)
+- [x] Corrigir SRE module mismatch (limpar cache Python)
+- [x] Aumentar timeout de requisição (120s → 300s)
+- [ ] Otimizar carregamento de modelo TensorFlow
+- [ ] Melhorar tratamento de erros no frontend
+- [ ] Adicionar feedback visual de progresso
+
+### Validação Final
+- [ ] Validar fluxo completo end-to-end
+- [ ] Testar em diferentes navegadores
+- [ ] Verificar performance (tempo de resposta)
+- [ ] Confirmar logs auditáveis funcionando
+- [ ] Validar salvamento no dataset incremental

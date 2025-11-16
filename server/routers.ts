@@ -235,7 +235,7 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
           console.log("[BINARY_CLASSIFIER] Logs detalhados em: /tmp/skin_classifier.log");
           
           const { stdout, stderr } = await execAsync(command, {
-            timeout: 120000, // 2 minutos
+            timeout: 300000, // 5 minutos (carregamento do modelo pode demorar)
             maxBuffer: 10 * 1024 * 1024 // 10MB
           });
           
