@@ -183,31 +183,22 @@ class BinarySkinClassifier:
             conv_layer = base_model.get_layer(last_conv_layer_name)
             logger.info(f"Camada obtida: {conv_layer.name} (tipo: {conv_layer.__class__.__name__})")
             
-            # Criar modelo Grad-CAM usando Input layer explícito
-            # Em vez de usar self.model.input (que pode não estar definido),
-            # criamos um Input layer e conectamos manualmente
-            from tensorflow.keras.layers import Input
+            # Criar modelo Grad-CAM simplificado
+            # Usar diretamente as camadas do modelo existente sem criar novo Input
             
-            # Criar input explícito
-            input_layer = Input(shape=(224, 224, 3))
+            # Obter input do modelo principal
+            model_input = self.model.input
             
-            # Obter outputs das camadas que precisamos
-            conv_layer_output = base_model.get_layer(last_conv_layer_name).output
+            # Obter output da camada convolucional
+            conv_output = base_model.get_layer(last_conv_layer_name).output
             
-            # Executar forward pass manualmente
-            x = input_layer
-            for layer in self.model.layers:
-                x = layer(x)
-            final_output = x
+            # Obter output final do modelo
+            model_output = self.model.output
             
-            # Obter output da camada conv
-            # Precisamos executar apenas até a camada conv
-            conv_output = base_model(input_layer)
-            
-            # Criar modelo que retorna tanto a saída conv quanto a predição final
+            # Criar modelo Grad-CAM que retorna tanto a saída conv quanto a predição final
             grad_model = keras.Model(
-                inputs=input_layer,
-                outputs=[conv_layer_output, final_output]
+                inputs=model_input,
+                outputs=[conv_output, model_output]
             )
             logger.info("Modelo Grad-CAM criado com sucesso")
             

@@ -495,3 +495,34 @@
 - [ ] Habilitar Vision API no Google Cloud Console (erro 403: API_KEY_SERVICE_BLOCKED)
 - [ ] Testar com Vision API habilitada
 - [ ] Documentar uso da Vision API
+
+
+## Migração para Gemini Vision (Vertex AI)
+
+- [x] Adaptar gemini_vision_analyzer.py para usar Vertex AI endpoint
+- [x] Atualizar autenticação para Bearer token (Authorization header)
+- [x] Configurar PROJECT_ID e LOCATION (us-central1)
+- [ ] Testar com chave Vertex AI fornecida (AQ.Ab8RN6JFrsu8L3gWt0dwZoyXgoHPysrt37e1j2MkFKNANiMlFA)
+- [ ] Validar relatório gerado pelo Gemini Vision
+- [ ] Atualizar documentação VISION_API_SETUP.md
+
+
+## Correção Crítica: Grad-CAM + Gemini Vision
+
+- [x] Corrigir erro "input_layer used 2 times" no binary_skin_classifier.py
+- [x] Atualizar gemini_vision_analyzer.py para API pública (generativelanguage.googleapis.com)
+- [x] Configurar nova chave API Gemini (AIzaSyA8Z4taiiPw2G0zabhODq8KsFbYmoGE3pk - vazada)
+- [x] Testar geração de Grad-CAM com imagem real (FUNCIONANDO)
+- [x] Testar análise multimodal completa (CNN + Grad-CAM + Groq Vision)
+- [x] Validar relatório final (3139 chars, provider: groq)
+
+
+## Sistema Multi-API (Gemini + Groq + Fallback)
+
+- [x] Atualizar gemini_vision_analyzer.py com nova chave Gemini (chave vazada - não funcional)
+- [x] Criar groq_vision_analyzer.py para Groq Vision API (Llama 4 Scout)
+- [x] Criar multi_vision_analyzer.py com sistema de fallback em cascata (Gemini → Groq → CNN)
+- [x] Integrar multi_vision_analyzer no classify_wrapper.py
+- [x] Testar Groq Vision (SUCESSO - 3139 chars)
+- [x] Validar sistema completo end-to-end (FUNCIONANDO PERFEITAMENTE)
+- [ ] Obter nova chave Gemini válida (atual reportada como vazada)
