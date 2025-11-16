@@ -76,3 +76,18 @@
 - [ ] Testar chat bot e capturar logs de erro completos
 - [ ] Identificar causa raiz do erro na API Gemini
 - [ ] Corrigir problema e validar funcionamento
+
+## Integração do Sistema de Classificação de Câncer de Pele
+
+- [x] Analisar código appv4.py do GitHub (https://github.com/marceloclaro/pele)
+- [x] Criar backend Python para classificação com TensorFlow/Keras e MobileNetV2
+- [x] Implementar geração de Grad-CAM (mapa de calor) para interpretabilidade
+- [x] Integrar API Gemini para gerar diagnósticos baseados em estatísticas e Grad-CAM
+- [x] Criar endpoint tRPC para upload de imagens e classificação
+- [x] Implementar interface web de upload de imagens dermatoscópicas
+- [x] Adicionar visualização de resultados (classe, confiança, Grad-CAM, diagnóstico)
+- [x] Criar seção "Classificação ao Vivo" no site (/classificador)
+- [x] Testar sistema completo end-to-end
+- [x] Corrigir Grad-CAM para MobileNetV2
+- [x] Atualizar chave API Gemini no gerador de diagnósticos
+- [ ] Documentar API e uso do sistema

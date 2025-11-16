@@ -75,6 +75,12 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button size="lg" className="gap-2" asChild>
+                  <a href="/classificador">
+                    <Brain className="h-5 w-5" />
+                    Testar Classificador
+                  </a>
+                </Button>
+                <Button size="lg" variant="outline" className="gap-2" asChild>
                   <a href="#download">
                     <Download className="h-5 w-5" />
                     Download Framework

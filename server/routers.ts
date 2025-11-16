@@ -4,6 +4,13 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { createContact, saveChatConversation, getChatHistory } from "./db";
+import { exec } from "child_process";
+import { promisify } from "util";
+import { writeFile, unlink } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+
+const execAsync = promisify(exec);
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -188,6 +195,119 @@ Responda de forma técnica, didática e motivadora para pesquisadores e investid
       }))
       .query(async ({ input }) => {
         return await getChatHistory(input.sessionId);
+      }),
+  }),
+
+  // Skin cancer classification router
+  skinClassifier: router({
+    classify: publicProcedure
+      .input(z.object({
+        imageBase64: z.string(),
+        generateDiagnosis: z.boolean().default(true),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log("[CLASSIFIER] Iniciando classificação...");
+          
+          // Salvar imagem temporariamente
+          const tempImagePath = join(tmpdir(), `skin_${Date.now()}.png`);
+          const imageBuffer = Buffer.from(
+            input.imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+            "base64"
+          );
+          await writeFile(tempImagePath, imageBuffer);
+          
+          // Executar classificação Python
+          const pythonScript = `
+import sys
+import json
+sys.path.append('/home/ubuntu/skin_cancer_classifier_k230_page/server')
+from skin_classifier import get_classifier
+
+classifier = get_classifier()
+result = classifier.predict('${tempImagePath}')
+print(json.dumps(result))
+`;
+          
+          const scriptPath = join(tmpdir(), `classify_${Date.now()}.py`);
+          await writeFile(scriptPath, pythonScript);
+          
+          const { stdout } = await execAsync(`python3 ${scriptPath}`);
+          const classificationResult = JSON.parse(stdout.trim());
+          
+          console.log("[CLASSIFIER] Classificação:", classificationResult);
+          
+          // Gerar Grad-CAM
+          const gradcamScript = `
+import sys
+import json
+sys.path.append('/home/ubuntu/skin_cancer_classifier_k230_page/server')
+from skin_classifier import get_classifier
+
+classifier = get_classifier()
+gradcam_base64 = classifier.generate_gradcam('${tempImagePath}')
+print(gradcam_base64)
+`;
+          
+          const gradcamScriptPath = join(tmpdir(), `gradcam_${Date.now()}.py`);
+          await writeFile(gradcamScriptPath, gradcamScript);
+          
+          const { stdout: gradcamOutput } = await execAsync(`python3 ${gradcamScriptPath}`);
+          const gradcamImage = gradcamOutput.trim();
+          
+          console.log("[CLASSIFIER] Grad-CAM gerado");
+          
+          // Gerar diagnóstico com Gemini se solicitado
+          let diagnosis = null;
+          if (input.generateDiagnosis) {
+            const diagnosisScript = `
+import sys
+import json
+sys.path.append('/home/ubuntu/skin_cancer_classifier_k230_page/server')
+from diagnosis_generator import get_diagnosis_generator
+
+result = ${JSON.stringify(classificationResult)}
+generator = get_diagnosis_generator()
+diagnosis = generator.generate_diagnosis(result)
+print(json.dumps(diagnosis))
+`;
+            
+            const diagnosisScriptPath = join(tmpdir(), `diagnosis_${Date.now()}.py`);
+            await writeFile(diagnosisScriptPath, diagnosisScript);
+            
+            try {
+              const { stdout: diagnosisOutput } = await execAsync(`python3 ${diagnosisScriptPath}`);
+              diagnosis = JSON.parse(diagnosisOutput.trim());
+              console.log("[CLASSIFIER] Diagnóstico gerado");
+            } catch (diagError) {
+              console.error("[CLASSIFIER] Erro ao gerar diagnóstico:", diagError);
+              diagnosis = {
+                success: false,
+                error: "Erro ao gerar diagnóstico",
+                diagnosis: "Diagnóstico não disponível"
+              };
+            }
+            
+            // Limpar arquivo do diagnóstico
+            await unlink(diagnosisScriptPath).catch(() => {});
+          }
+          
+          // Limpar arquivos temporários
+          await unlink(tempImagePath).catch(() => {});
+          await unlink(scriptPath).catch(() => {});
+          await unlink(gradcamScriptPath).catch(() => {});
+          
+          return {
+            success: true,
+            classification: classificationResult,
+            gradcam: gradcamImage,
+            diagnosis: diagnosis,
+          };
+          
+        } catch (error: any) {
+          console.error("[CLASSIFIER] Erro:", error);
+          throw new Error(`Erro na classificação: ${error.message}`);
+        }
       }),
   }),
 });
