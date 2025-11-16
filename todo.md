@@ -463,3 +463,11 @@
 - [x] Instalar Pillow (via opencv-python-headless)
 - [x] Instalar google-generativeai (0.8.5)
 - [x] Testar classificação completa (SUCESSO!)
+
+
+## Correções para Produção
+
+- [x] Corrigir comando Python (python3.11 → python3)
+- [x] Atualizar GEMINI_API_KEY (AIzaSyA_LuWtvZeJUm-PstXayEXCwKOPCRw9yMY)
+- [x] Testar em desenvolvimento
+- [ ] Publicar em produção
