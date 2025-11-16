@@ -11,76 +11,7 @@ interface Message {
   content: string;
 }
 
-// Chaves API Gemini (hardcoded para estudo)
-const GEMINI_API_KEY_PRIMARY = "AIzaSyDVc5QnyhxvwoY1gqniVZ2jNCzeOEf4Nnc";
-const GEMINI_API_KEY_FALLBACK = "AIzaSyBkD7xM8hcZ-3h1dNUumF6D401iXUVuWEs";
-const GEMINI_MODEL = "gemini-pro";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-const PROJECT_CONTEXT = `Você é um assistente técnico especializado no projeto "Classificador de Câncer de Pele K230". 
-Suas respostas devem ser técnicas, precisas e baseadas nas seguintes informações do projeto:
-
-**Sobre o Projeto:**
-- Framework completo de classificação de câncer de pele com IA
-- Otimizado para o processador K230 (6 TOPS)
-- Padrão Qualis A1 de rigor científico
-- 18 módulos Python (~5.000 linhas de código)
-- 16 documentos técnicos completos
-
-**Resultados Científicos:**
-- Acurácia média: 89.09% (seed Fibonacci 144)
-- Latência K230: <100ms (-23 a -38% vs baseline)
-- Melhor seed: Fibonacci 144 (0.8909 ± 0.0267)
-- Dataset: HAM10000 (10.015 imagens)
-
-**Tecnologias:**
-- Modelo: MobileNetV2 + Transfer Learning
-- Detecção: YOLOv8-nano (320x320)
-- Interpretabilidade: Grad-CAM++, Integrated Gradients, SHAP
-- Otimização: QAT, PTQ avançado, calibração KL Divergence
-- Quantização: INT8 completa
-- Monitoramento: MLflow + TensorBoard
-
-**Hardware K230:**
-- Processador: 6 TOPS de potência
-- Custo: ~R$ 500/dispositivo
-- Consumo: 10x menor que GPUs
-- Integração: OpenRouter AI (ChatGPT, Gemini, Llama, Claude)
-
-**Validação Clínica:**
-- Conformidade: FDA, ANVISA, CE
-- Métricas: ROC, Precision-Recall, IC 95%
-- Calibração de confiança: Temperature Scaling, ECE
-- Salvamento automático em SD para auditoria
-
-**Aplicação:**
-- Instituição: SME Crateús-CE
-- Uso: Triagem clínica para residência médica em dermatologia
-- Impacto: Cobertura de +15.000 habitantes
-- Autor: Marcelo Claro Laranjeira (marceloclaro@gmail.com)
-
-**Módulos Principais:**
-1. Preparação de dados (EDA, divisão estratificada)
-2. Treinamento (MobileNetV2, data augmentation)
-3. Avaliação (métricas clínicas completas)
-4. Grad-CAM++ (mapas de calor)
-5. Exportação TFLite
-6. Compilação K230 (nncase)
-7. Padronização de imagens (CLAHE)
-8. Calibração de confiança
-9. YOLO detecção
-10. Validação cruzada 5-fold
-11. Relatório científico Qualis A1
-12. Knowledge Distillation + Pruning
-13. Análise de atenção avançada
-14. Sistema de monitoramento
-15. Ensemble com seeds matemáticas
-16. Salvamento padrão médico
-17. Teste de seeds
-18. Sistema de inferência K230
-
-Responda de forma técnica, didática e motivadora para pesquisadores e investidores. 
-Se a pergunta for sobre colaboração, direcione para o formulário de contato ou email: marceloclaro@gmail.com`;
+// As chaves API e contexto agora estão no backend (server/routers.ts)
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +25,6 @@ export default function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const saveChatMutation = trpc.chat.saveConversation.useMutation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,87 +34,29 @@ export default function ChatBot() {
     scrollToBottom();
   }, [messages]);
 
+  const sendMessageMutation = trpc.chat.sendMessage.useMutation();
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: "user", content: input };
+    const currentInput = input;
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
-      // Tentar com chave primária
-      let response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_PRIMARY}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `${PROJECT_CONTEXT}\n\nPergunta do usuário: ${input}`
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
-          }
-        })
+      const result = await sendMessageMutation.mutateAsync({
+        message: currentInput,
+        sessionId,
       });
 
-      // Se falhar, tentar com chave fallback
-      if (!response.ok) {
-        console.warn("Chave primária falhou, tentando chave fallback...");
-        response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_FALLBACK}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `${PROJECT_CONTEXT}\n\nPergunta do usuário: ${input}`
-                  }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 1024,
-            }
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erro ao comunicar com a API Gemini");
-        }
-      }
-
-      const data = await response.json();
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.candidates[0].content.parts[0].text
+        content: result.response
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Salvar conversa no banco de dados
-      try {
-        await saveChatMutation.mutateAsync({
-          sessionId,
-          userMessage: input,
-          botResponse: assistantMessage.content,
-        });
-      } catch (dbError) {
-        console.error("Erro ao salvar conversa:", dbError);
-        // Não mostrar erro ao usuário, apenas logar
-      }
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       const errorMessage: Message = {

@@ -37,6 +37,104 @@ export const appRouter = router({
 
   // Chat bot router
   chat: router({
+    sendMessage: publicProcedure
+      .input(z.object({
+        message: z.string(),
+        sessionId: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const GEMINI_API_KEY_PRIMARY = "AIzaSyDVc5QnyhxvwoY1gqniVZ2jNCzeOEf4Nnc";
+        const GEMINI_API_KEY_FALLBACK = "AIzaSyBkD7xM8hcZ-3h1dNUumF6D401iXUVuWEs";
+        const GEMINI_MODEL = "gemini-pro";
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+        const PROJECT_CONTEXT = `Você é um assistente técnico especializado no projeto "Classificador de Câncer de Pele K230". 
+Suas respostas devem ser técnicas, precisas e baseadas nas seguintes informações do projeto:
+
+**Sobre o Projeto:**
+- Framework completo de classificação de câncer de pele com IA
+- Otimizado para o processador K230 (6 TOPS)
+- Padrão Qualis A1 de rigor científico
+- 18 módulos Python (~5.000 linhas de código)
+- 16 documentos técnicos completos
+
+**Resultados Científicos:**
+- Acurácia média: 89.09% (seed Fibonacci 144)
+- Latência K230: <100ms (-23 a -38% vs baseline)
+- Melhor seed: Fibonacci 144 (0.8909 ± 0.0267)
+- Dataset: HAM10000 (10.015 imagens)
+
+Responda de forma técnica, didática e motivadora para pesquisadores e investidores.`;
+
+        try {
+          // Tentar com chave primária
+          let response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_PRIMARY}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: `${PROJECT_CONTEXT}\n\nPergunta do usuário: ${input.message}`
+                    }
+                  ]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1024,
+              }
+            })
+          });
+
+          // Se falhar, tentar com chave fallback
+          if (!response.ok) {
+            response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY_FALLBACK}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: `${PROJECT_CONTEXT}\n\nPergunta do usuário: ${input.message}`
+                      }
+                    ]
+                  }
+                ],
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 1024,
+                }
+              })
+            });
+          }
+
+          if (!response.ok) {
+            throw new Error("Erro ao comunicar com a API Gemini");
+          }
+
+          const data = await response.json();
+          const botResponse = data.candidates[0].content.parts[0].text;
+
+          // Salvar conversa no banco de dados
+          await saveChatConversation({
+            sessionId: input.sessionId,
+            userMessage: input.message,
+            botResponse,
+          });
+
+          return { response: botResponse };
+        } catch (error) {
+          console.error("Erro ao processar mensagem:", error);
+          throw new Error("Erro ao processar sua mensagem. Por favor, tente novamente.");
+        }
+      }),
     saveConversation: publicProcedure
       .input(z.object({
         sessionId: z.string(),

@@ -44,3 +44,9 @@
 - [x] Adicionar notificações de erro
 - [x] Integrar notificações com o chat bot
 - [x] Criar notificações personalizadas por tipo de ação
+
+## Bug Crítico
+
+- [x] Corrigir chat bot que está retornando erro para todas as mensagens
+- [x] Verificar integração da API Gemini
+- [x] Testar comunicação com a API
