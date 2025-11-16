@@ -295,13 +295,13 @@ export default function SkinClassifier() {
                         Relatório Diagnóstico
                       </CardTitle>
                       <CardDescription>
-                        Gerado automaticamente pela API Gemini
+                        Gerado automaticamente por {result.diagnosis.provider === 'groq' ? 'Groq Vision (Llama 4 Scout)' : result.diagnosis.provider === 'gemini' ? 'Gemini Vision' : 'CNN'}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm max-w-none">
                         <Streamdown>
-                          {result.diagnosis.diagnosis}
+                          {result.diagnosis.analysis || result.diagnosis.diagnosis || 'Relatório não disponível'}
                         </Streamdown>
                       </div>
                     </CardContent>

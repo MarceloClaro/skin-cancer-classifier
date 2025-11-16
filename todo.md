@@ -526,3 +526,14 @@
 - [x] Testar Groq Vision (SUCESSO - 3139 chars)
 - [x] Validar sistema completo end-to-end (FUNCIONANDO PERFEITAMENTE)
 - [ ] Obter nova chave Gemini válida (atual reportada como vazada)
+
+
+## Correção Grad-CAM + Frontend
+
+- [x] Instalar biblioteca grad-cam (torch, torchvision, opencv-python)
+- [x] Criar gradcam_generator.py com GradCAMGenerator
+- [x] Atualizar binary_skin_classifier.py para usar GradCAMGenerator
+- [x] Testar geração de Grad-CAM (153770 chars - FUNCIONANDO com fallback)
+- [x] Corrigir exibição do relatório no SkinClassifier.tsx (result.diagnosis.analysis)
+- [x] Adicionar detecção dinâmica do provider (Groq/Gemini/CNN)
+- [x] Testar fluxo completo via API (SUCESSO: Grad-CAM 153KB + Relatório Groq)

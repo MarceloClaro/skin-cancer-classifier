@@ -162,7 +162,7 @@ class BinarySkinClassifier:
     
     def generate_gradcam(self, image_path):
         """
-        Gera visualização Grad-CAM
+        Gera visualização Grad-CAM usando GradCAMGenerator
         
         Args:
             image_path: Caminho para a imagem
@@ -171,88 +171,13 @@ class BinarySkinClassifier:
             String base64 da imagem Grad-CAM
         """
         try:
-            # Preprocessar imagem
-            img_array = self.preprocess_image(image_path)
+            from gradcam_generator import GradCAMGenerator
             
-            # Obter última camada convolucional
-            last_conv_layer_name = self._get_last_conv_layer()
-            logger.info(f"Usando camada para Grad-CAM: {last_conv_layer_name}")
+            logger.info("Gerando Grad-CAM com GradCAMGenerator...")
+            generator = GradCAMGenerator(self.model)
+            gradcam_base64 = generator.generate(image_path)
             
-            # Obter base model e camada convolucional
-            base_model = self.model.get_layer('mobilenetv2_1.00_224')
-            conv_layer = base_model.get_layer(last_conv_layer_name)
-            logger.info(f"Camada obtida: {conv_layer.name} (tipo: {conv_layer.__class__.__name__})")
-            
-            # Criar modelo Grad-CAM simplificado
-            # Usar diretamente as camadas do modelo existente sem criar novo Input
-            
-            # Obter input do modelo principal
-            model_input = self.model.input
-            
-            # Obter output da camada convolucional
-            conv_output = base_model.get_layer(last_conv_layer_name).output
-            
-            # Obter output final do modelo
-            model_output = self.model.output
-            
-            # Criar modelo Grad-CAM que retorna tanto a saída conv quanto a predição final
-            grad_model = keras.Model(
-                inputs=model_input,
-                outputs=[conv_output, model_output]
-            )
-            logger.info("Modelo Grad-CAM criado com sucesso")
-            
-            # Calcular gradientes
-            with tf.GradientTape() as tape:
-                # Garantir que o tensor seja observado
-                tape.watch(img_array)
-                conv_outputs, predictions = grad_model(img_array, training=False)
-                # Para classificação binária, usar a probabilidade da classe predita
-                if predictions.shape[-1] == 1:
-                    loss = predictions[:, 0]
-                else:
-                    loss = predictions[:, tf.argmax(predictions[0])]
-            
-            # Gradientes da última camada conv
-            grads = tape.gradient(loss, conv_outputs)
-            
-            # Pooling dos gradientes
-            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-            
-            # Pesos * ativações
-            conv_outputs = conv_outputs[0]
-            heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
-            heatmap = tf.squeeze(heatmap)
-            
-            # Normalizar heatmap
-            heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
-            heatmap = heatmap.numpy()
-            
-            # Carregar imagem original
-            img_original = cv2.imread(image_path)
-            img_original = cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB)
-            
-            # Redimensionar heatmap
-            heatmap_resized = cv2.resize(heatmap, (img_original.shape[1], img_original.shape[0]))
-            
-            # Aplicar colormap
-            heatmap_colored = cv2.applyColorMap(
-                (heatmap_resized * 255).astype(np.uint8),
-                cv2.COLORMAP_JET
-            )
-            heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
-            
-            # Sobrepor heatmap na imagem
-            superimposed = cv2.addWeighted(img_original, 0.6, heatmap_colored, 0.4, 0)
-            
-            # Converter para base64
-            pil_img = Image.fromarray(superimposed)
-            buffer = BytesIO()
-            pil_img.save(buffer, format='PNG')
-            gradcam_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            
-            logger.info("Grad-CAM gerado com sucesso")
-            return f"data:image/png;base64,{gradcam_base64}"
+            return gradcam_base64
             
         except Exception as e:
             logger.error(f"Erro ao gerar Grad-CAM: {e}")
