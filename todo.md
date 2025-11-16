@@ -27,3 +27,20 @@
 
 - [x] Corrigir integração hardcoded da API Gemini no ChatBot
 - [x] Testar funcionamento do chat bot com API real
+
+## Feature de Banco de Dados
+
+- [x] Adicionar feature web-db-user ao projeto
+- [x] Criar schema para tabela de contatos
+- [x] Criar schema para tabela de conversas do chat
+- [x] Implementar persistência no formulário de contato
+- [x] Implementar persistência no histórico do chat bot
+- [ ] Criar painel administrativo para visualizar dados
+
+## Sistema de Notificações Personalizadas
+
+- [x] Implementar sistema de toast notifications
+- [x] Adicionar notificações de sucesso no formulário
+- [x] Adicionar notificações de erro
+- [x] Integrar notificações com o chat bot
+- [x] Criar notificações personalizadas por tipo de ação

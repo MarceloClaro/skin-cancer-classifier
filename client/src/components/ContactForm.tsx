@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Mail, Send, User, Building } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -19,15 +20,26 @@ export default function ContactForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const submitContactMutation = trpc.contact.submit.useMutation();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simular envio (em produção, você integraria com um backend ou serviço de email)
-    setTimeout(() => {
-      toast.success("Mensagem enviada com sucesso!", {
-        description: "Entraremos em contato em breve. Você também pode nos contatar diretamente em marceloclaro@gmail.com"
+    try {
+      await submitContactMutation.mutateAsync({
+        name: formData.name,
+        email: formData.email,
+        institution: formData.institution || undefined,
+        interestType: formData.interest as "pesquisador" | "investidor" | "instituicao" | "outro",
+        message: formData.message,
       });
+
+      toast.success("🎉 Mensagem enviada com sucesso!", {
+        description: "Entraremos em contato em breve. Você também pode nos contatar diretamente em marceloclaro@gmail.com",
+        duration: 5000,
+      });
+
       setFormData({
         name: "",
         email: "",
@@ -36,8 +48,15 @@ export default function ContactForm() {
         interest: "",
         message: ""
       });
+    } catch (error) {
+      toast.error("❌ Erro ao enviar mensagem", {
+        description: "Por favor, tente novamente ou entre em contato diretamente por email.",
+        duration: 5000,
+      });
+      console.error("Erro ao enviar contato:", error);
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   const handleChange = (field: string, value: string) => {

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface Message {
   role: "user" | "assistant";
@@ -90,7 +92,9 @@ export default function ChatBot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const saveChatMutation = trpc.chat.saveConversation.useMutation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -169,6 +173,18 @@ export default function ChatBot() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Salvar conversa no banco de dados
+      try {
+        await saveChatMutation.mutateAsync({
+          sessionId,
+          userMessage: input,
+          botResponse: assistantMessage.content,
+        });
+      } catch (dbError) {
+        console.error("Erro ao salvar conversa:", dbError);
+        // Não mostrar erro ao usuário, apenas logar
+      }
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       const errorMessage: Message = {
@@ -176,6 +192,10 @@ export default function ChatBot() {
         content: "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente ou entre em contato diretamente pelo email: marceloclaro@gmail.com"
       };
       setMessages(prev => [...prev, errorMessage]);
+      toast.error("❌ Erro no chat bot", {
+        description: "Houve um problema ao processar sua mensagem. Tente novamente.",
+        duration: 3000,
+      });
     } finally {
       setIsLoading(false);
     }
