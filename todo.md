@@ -352,3 +352,26 @@
 - [ ] Testar na web (pele.manus.space)
 - [ ] Verificar ausência de erros no console
 - [ ] Salvar checkpoint final
+
+
+## Pesquisa e Correção Definitiva do Erro de Hidratação
+
+### Pesquisa em Documentação Oficial
+- [x] Pesquisar React docs sobre hidratação (react.dev/reference/react-dom/client/hydrateRoot)
+- [x] Pesquisar React docs sobre SSR e problemas comuns
+- [x] Pesquisar soluções: suppressHydrationWarning, useSyncExternalStore
+- [x] Identificar causa: Portals (Toaster, TooltipProvider) causam insertBefore
+
+### Análise de Repositórios e Issues
+- [x] Buscar issues no GitHub do React relacionadas a insertBefore (#13278)
+- [x] Analisar soluções implementadas pela comunidade (Reddit, Medium)
+- [x] Documentar descobertas em HYDRATION_RESEARCH.md
+
+### Implementação de Solução
+- [x] Identificar causa raiz: Portals (Toaster, TooltipProvider)
+- [x] Criar hook useIsClient com useSyncExternalStore
+- [x] Atualizar App.tsx para renderizar portals apenas no cliente
+- [x] Remover isMounted dos componentes (não mais necessário)
+- [x] Reiniciar servidor
+- [ ] Validar solução em produção (pele.manus.space)
+- [x] Documentar solução (HYDRATION_RESEARCH.md)

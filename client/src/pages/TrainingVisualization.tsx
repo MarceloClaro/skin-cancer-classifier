@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ZoomIn, TrendingUp, BarChart3, Activity } from "lucide-react";
@@ -45,15 +45,6 @@ const mockReport: TrainingReport = {
 
 export default function TrainingVisualization() {
   const [selectedImage, setSelectedImage] = useState<{ url: string; title: string } | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const visualizationCards = [
     {

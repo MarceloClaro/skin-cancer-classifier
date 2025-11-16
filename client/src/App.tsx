@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import SkinClassifier from "./pages/SkinClassifier";
 import TrainingVisualization from "./pages/TrainingVisualization";
 import RetrainingInterface from "./pages/RetrainingInterface";
+import { useIsClient } from "./hooks/useIsClient";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -30,16 +31,21 @@ function Router() {
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
+  const isClient = useIsClient();
+
   return (
     <ErrorBoundary>
       <ThemeProvider
         defaultTheme="light"
         // switchable
       >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        {isClient && (
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        )}
+        {!isClient && <Router />}
       </ThemeProvider>
     </ErrorBoundary>
   );

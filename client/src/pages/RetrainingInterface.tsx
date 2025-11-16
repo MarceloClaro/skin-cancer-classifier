@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,6 @@ interface TrainingStatus {
 }
 
 export default function RetrainingInterface() {
-  const [isMounted, setIsMounted] = useState(false);
   const [config, setConfig] = useState<TrainingConfig>({
     learningRate: 0.0001,
     epochs: 20,
@@ -102,14 +101,6 @@ export default function RetrainingInterface() {
     }));
     toast.warning("Treinamento cancelado");
   };
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const progress = status.totalEpochs > 0 ? (status.currentEpoch / status.totalEpochs) * 100 : 0;
 
