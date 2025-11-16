@@ -331,3 +331,24 @@
 - [ ] Testar interface de retreinamento completa
 - [ ] Verificar performance com modelo HAM10000
 - [ ] Documentar processo completo
+
+
+## Correção de Erro NotFoundError (insertBefore)
+
+### Análise do Erro
+- [x] Analisar stack trace completo do erro
+- [x] Identificar componente problemático (TrainingVisualization e RetrainingInterface)
+- [x] Verificar uso de hooks (useState, useEffect) antes da montagem
+- [x] Identificar renderização condicional problemática
+
+### Correção
+- [x] Adicionar useEffect para operações do DOM
+- [x] Corrigir renderização condicional (return null se não montado)
+- [x] Adicionar verificação de montagem do componente (isMounted)
+- [x] Testar correção localmente
+
+### Validação
+- [x] Reiniciar servidor
+- [ ] Testar na web (pele.manus.space)
+- [ ] Verificar ausência de erros no console
+- [ ] Salvar checkpoint final
