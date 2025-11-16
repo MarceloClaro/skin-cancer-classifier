@@ -13,7 +13,7 @@ export default function SkinClassifier() {
   const [result, setResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const classifyMutation = trpc.skinClassifier.classify.useMutation({
+  const classifyMutation = trpc.skinClassifier.classifyBinary.useMutation({
     onSuccess: (data) => {
       setResult(data);
       setIsAnalyzing(false);
@@ -94,6 +94,13 @@ export default function SkinClassifier() {
       </div>
 
       <div className="container py-12">
+        {/* Badge do Modelo Treinado */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            <CheckCircle2 className="h-4 w-4" />
+            Modelo Treinado Customizado (BENIGNO vs MALIGNO)
+          </div>
+        </div>
         {/* Aviso Importante */}
         <Alert className="mb-8 border-amber-200 bg-amber-50">
           <AlertCircle className="h-5 w-5 text-amber-600" />

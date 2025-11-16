@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-11-16T12:33:41.243443",
+  "dataset_path": "/home/ubuntu/skin_dataset",
+  "total_images": 40,
+  "train_images": 32,
+  "val_images": 8,
+  "classes": {
+    "BENIGNO": 0,
+    "MALIGNO": 1
+  },
+  "img_size": [
+    224,
+    224
+  ],
+  "batch_size": 8,
+  "epochs": 24,
+  "final_accuracy": 0.75,
+  "final_val_accuracy": 0.75,
+  "final_auc": 0.6875,
+  "model_path": "/home/ubuntu/skin_cancer_classifier_k230_page/models/skin_cancer_model.h5"
+}

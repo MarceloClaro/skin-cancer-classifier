@@ -91,3 +91,20 @@
 - [x] Corrigir Grad-CAM para MobileNetV2
 - [x] Atualizar chave API Gemini no gerador de diagnósticos
 - [ ] Documentar API e uso do sistema
+
+
+## Treinamento de Modelo Personalizado
+
+- [x] Extrair dataset TREINO.zip (40 imagens: 20 BENIGNO + 20 MALIGNO)
+- [x] Analisar estrutura e classes do dataset
+- [x] Criar script de treinamento com data augmentation agressivo
+- [x] Implementar transfer learning com MobileNetV2 em 2 fases
+- [x] Treinar modelo com validação (80/20 split)
+- [x] Avaliar métricas (Acurácia: 75%, AUC: 0.62)
+- [x] Gerar matriz de confusão e curvas ROC
+- [x] Salvar modelo treinado (skin_cancer_model.h5)
+- [x] Criar binary_skin_classifier.py para modelo binário
+- [x] Integrar endpoint tRPC classifyBinary
+- [x] Atualizar frontend com badge de modelo treinado
+- [x] Testar classificador com modelo personalizado (MALIGNO 64.68%)
+- [ ] Documentar processo de treinamento e resultados
