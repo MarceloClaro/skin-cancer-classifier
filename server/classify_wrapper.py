@@ -8,6 +8,7 @@ import sys
 import json
 import logging
 import traceback
+import time
 from pathlib import Path
 
 # Configurar logging
@@ -21,6 +22,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Importar audit logger
+try:
+    sys.path.insert(0, '/home/ubuntu/skin_cancer_classifier_k230_page/server')
+    from audit_logger import get_audit_logger
+    audit_logger = get_audit_logger('classifier')
+except ImportError as e:
+    audit_logger = None
+    logger.warning(f"Audit logger não disponível: {e}")
+
 def classify_image(image_path: str, generate_gradcam: bool = True, generate_diagnosis: bool = True):
     """
     Classifica imagem de lesão de pele
@@ -33,11 +43,24 @@ def classify_image(image_path: str, generate_gradcam: bool = True, generate_diag
     Returns:
         Dict com resultados
     """
+    start_time = time.time()
+    event_id = None
+    
     try:
         logger.info(f"=== INICIANDO CLASSIFICAÇÃO ===")
         logger.info(f"Imagem: {image_path}")
         logger.info(f"Grad-CAM: {generate_gradcam}")
         logger.info(f"Diagnóstico: {generate_diagnosis}")
+        
+        # Log auditável
+        if audit_logger:
+            event_id = audit_logger.log_classification_start(
+                image_path=image_path,
+                parameters={
+                    "generate_gradcam": generate_gradcam,
+                    "generate_diagnosis": generate_diagnosis
+                }
+            )
         
         # Verificar se imagem existe
         if not Path(image_path).exists():
@@ -123,6 +146,16 @@ def classify_image(image_path: str, generate_gradcam: bool = True, generate_diag
             result['saved_to_dataset'] = {'success': False, 'error': str(e)}
         
         logger.info("=== CLASSIFICAÇÃO CONCLUÍDA COM SUCESSO ===")
+        
+        # Log auditável de conclusão
+        if audit_logger and event_id:
+            duration = time.time() - start_time
+            audit_logger.log_classification_complete(
+                event_id=event_id,
+                result=result,
+                duration_seconds=duration
+            )
+        
         return result
         
     except Exception as e:
@@ -131,6 +164,17 @@ def classify_image(image_path: str, generate_gradcam: bool = True, generate_diag
         logger.error(f"Mensagem: {str(e)}")
         logger.error(f"Stack trace completo:")
         logger.error(traceback.format_exc())
+        
+        # Log auditável de erro
+        if audit_logger and event_id:
+            audit_logger.log_classification_error(
+                event_id=event_id,
+                error=e,
+                context={
+                    "image_path": image_path,
+                    "stage": "classification"
+                }
+            )
         
         return {
             'success': False,

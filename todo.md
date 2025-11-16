@@ -172,3 +172,48 @@
 - [x] Corrigir Gemini Vision (remover safetySettings inválido)
 - [ ] Testar fluxo completo via interface web
 - [ ] Documentar processo completo
+
+
+## Correção de Erro Persistente e Sistema de Auditoria
+
+### Investigação e Correção
+- [x] Analisar PDF fornecido pelo usuário (NotFoundError: insertBefore)
+- [x] Reproduzir erro via interface web (/classificador)
+- [x] Capturar logs completos do erro
+- [x] Identificar causa raiz específica (Grad-CAM: modelo funcional)
+- [x] Implementar correção definitiva (inputs correto + training=False)
+- [x] Validar correção com múltiplos testes (Grad-CAM gerando PNG)
+
+### Sistema de Logs Auditáveis
+- [x] Criar módulo de logging centralizado (audit_logger.py)
+- [x] Implementar logs estruturados (JSON)
+- [x] Adicionar timestamps e IDs de rastreamento (UUID)
+- [x] Salvar logs em arquivos JSONL por componente
+- [ ] Criar interface de visualização de logs
+- [x] Implementar níveis de log (DEBUG, INFO, WARNING, ERROR)
+- [x] Adicionar contexto completo (usuário, imagem, parâmetros)
+- [x] Integrar audit logger no classify_wrapper.py
+
+### Controle e Experiência do Usuário
+- [ ] Criar painel de controle do usuário
+- [ ] Mostrar progresso em tempo real (classificação, Grad-CAM, diagnóstico)
+- [ ] Implementar histórico de classificações
+- [ ] Adicionar opção de download de relatórios
+- [ ] Criar sistema de feedback do usuário
+- [ ] Implementar visualização de estatísticas pessoais
+
+### Auditoria de Treinamento
+- [ ] Registrar todos os parâmetros de treinamento
+- [ ] Salvar métricas de cada época
+- [ ] Criar histórico de modelos treinados
+- [ ] Implementar comparação de modelos
+- [ ] Adicionar interface de retreinamento manual
+- [ ] Gerar relatórios de treinamento em PDF
+
+### Melhorias de UX
+- [ ] Adicionar indicadores de progresso detalhados
+- [ ] Implementar notificações em tempo real
+- [ ] Criar tour guiado para novos usuários
+- [ ] Adicionar tooltips explicativos
+- [ ] Implementar modo de visualização de resultados
+- [ ] Criar FAQ interativo

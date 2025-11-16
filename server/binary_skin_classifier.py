@@ -175,16 +175,26 @@ class BinarySkinClassifier:
             
             # Criar modelo Grad-CAM que conecta input do modelo principal à saída da conv layer
             # Precisamos acessar a saída da camada conv do base_model
+            # Usar modelo funcional que retorna outputs intermediários
+            conv_layer_output = base_model.get_layer(last_conv_layer_name).output
+            
+            # Criar modelo que retorna tanto a saída conv quanto a predição final
             grad_model = keras.Model(
                 inputs=self.model.input,
-                outputs=[base_model.get_layer(last_conv_layer_name).output, self.model.output]
+                outputs=[conv_layer_output, self.model.output]
             )
             logger.info("Modelo Grad-CAM criado com sucesso")
             
             # Calcular gradientes
             with tf.GradientTape() as tape:
-                conv_outputs, predictions = grad_model(img_array)
-                loss = predictions[:, 0]
+                # Garantir que o tensor seja observado
+                tape.watch(img_array)
+                conv_outputs, predictions = grad_model(img_array, training=False)
+                # Para classificação binária, usar a probabilidade da classe predita
+                if predictions.shape[-1] == 1:
+                    loss = predictions[:, 0]
+                else:
+                    loss = predictions[:, tf.argmax(predictions[0])]
             
             # Gradientes da última camada conv
             grads = tape.gradient(loss, conv_outputs)
