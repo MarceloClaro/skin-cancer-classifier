@@ -64,12 +64,16 @@ class BinarySkinClassifier:
         logger.info(f"Carregando modelo de: {self.model_path}")
         self.model = keras.models.load_model(self.model_path)
         
-        # Inicializar modelo com predição dummy para definir inputs (necessário para Grad-CAM)
+        # Forçar construção do modelo com build() para definir inputs
+        if not self.model.built:
+            self.model.build(input_shape=(None, 224, 224, 3))
+        
+        # Inicializar modelo com predição dummy para garantir que todas as camadas sejam inicializadas
         import numpy as np
         dummy_input = np.zeros((1, 224, 224, 3), dtype=np.float32)
         _ = self.model.predict(dummy_input, verbose=0)
         
-        logger.info("Modelo carregado e inicializado com sucesso")
+        logger.info("Modelo carregado, construído e inicializado com sucesso")
     
     def preprocess_image(self, image_path):
         """
@@ -179,15 +183,31 @@ class BinarySkinClassifier:
             conv_layer = base_model.get_layer(last_conv_layer_name)
             logger.info(f"Camada obtida: {conv_layer.name} (tipo: {conv_layer.__class__.__name__})")
             
-            # Criar modelo Grad-CAM que conecta input do modelo principal à saída da conv layer
-            # Precisamos acessar a saída da camada conv do base_model
-            # Usar modelo funcional que retorna outputs intermediários
+            # Criar modelo Grad-CAM usando Input layer explícito
+            # Em vez de usar self.model.input (que pode não estar definido),
+            # criamos um Input layer e conectamos manualmente
+            from tensorflow.keras.layers import Input
+            
+            # Criar input explícito
+            input_layer = Input(shape=(224, 224, 3))
+            
+            # Obter outputs das camadas que precisamos
             conv_layer_output = base_model.get_layer(last_conv_layer_name).output
+            
+            # Executar forward pass manualmente
+            x = input_layer
+            for layer in self.model.layers:
+                x = layer(x)
+            final_output = x
+            
+            # Obter output da camada conv
+            # Precisamos executar apenas até a camada conv
+            conv_output = base_model(input_layer)
             
             # Criar modelo que retorna tanto a saída conv quanto a predição final
             grad_model = keras.Model(
-                inputs=self.model.input,
-                outputs=[conv_layer_output, self.model.output]
+                inputs=input_layer,
+                outputs=[conv_layer_output, final_output]
             )
             logger.info("Modelo Grad-CAM criado com sucesso")
             

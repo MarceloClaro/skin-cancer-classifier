@@ -471,3 +471,13 @@
 - [x] Atualizar GEMINI_API_KEY (AIzaSyA_LuWtvZeJUm-PstXayEXCwKOPCRw9yMY)
 - [x] Testar em desenvolvimento
 - [ ] Publicar em produção
+
+
+## Correções de Visualização
+
+- [x] Investigar por que Grad-CAM não aparece no classificador (erro: modelo não inicializado)
+- [x] Corrigir Grad-CAM usando Input layer explícito (FUNCIONANDO!)
+- [x] Investigar por que diagnóstico Gemini não é exibido (chave API antiga)
+- [x] Atualizar GEMINI_API_KEY (pronta para produção)
+- [ ] Corrigir atualização da página /treinamento após retreinamento
+- [x] Testar Grad-CAM (SUCESSO em desenvolvimento)
