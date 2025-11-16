@@ -95,10 +95,14 @@ export default function SkinClassifier() {
 
       <div className="container py-12">
         {/* Badge do Modelo Treinado */}
-        <div className="flex justify-center mb-6">
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
             <CheckCircle2 className="h-4 w-4" />
             Modelo Treinado Customizado (BENIGNO vs MALIGNO)
+          </div>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+            <Activity className="h-4 w-4" />
+            Análise Multimodal: CNN + Vision API
           </div>
         </div>
         {/* Aviso Importante */}

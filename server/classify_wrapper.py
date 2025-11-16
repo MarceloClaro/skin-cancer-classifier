@@ -30,6 +30,7 @@ try:
     from binary_skin_classifier import BinarySkinClassifier
     from diagnosis_generator import generate_diagnosis
     from audit_logger import AuditLogger
+    from vision_analyzer import VisionAnalyzer
 except ImportError as e:
     logger.error(f"Erro ao importar módulos: {e}")
     print(json.dumps({
@@ -89,18 +90,51 @@ def classify_image(image_path: str, generate_gradcam: bool = True, generate_diag
         
         logger.info(f"Classificação concluída: {result['class']} ({result['confidence']:.2%})")
         
+        # Analisar com Vision API
+        vision_analysis = None
+        logger.info("Analisando com Vision API...")
+        try:
+            vision_analyzer = VisionAnalyzer()
+            vision_analysis = vision_analyzer.analyze_skin_lesion(image_path)
+            logger.info(f"Vision API: {vision_analysis.get('success', False)}")
+        except Exception as e:
+            logger.warning(f"Erro na Vision API: {e}")
+            vision_analysis = {'success': False, 'error': str(e)}
+        
         # Gerar diagnóstico se solicitado
         diagnosis = None
         if generate_diagnosis_flag:
-            logger.info("Gerando diagnóstico automático...")
+            logger.info("Gerando diagnóstico multimodal...")
             try:
-                diagnosis = generate_diagnosis(
-                    image_path=image_path,
-                    classification_result=result['class'],
-                    confidence=result['confidence'],
-                    gradcam_base64=result.get('gradcam')
-                )
-                logger.info("Diagnóstico gerado com sucesso")
+                # Se Vision API funcionou, usar relatório combinado
+                if vision_analysis and vision_analysis.get('success'):
+                    vision_analyzer = VisionAnalyzer()
+                    cnn_prediction = {
+                        'class': result['class'],
+                        'confidence': result['confidence'],
+                        'risk_level': result['risk_level']
+                    }
+                    diagnosis_text = vision_analyzer.generate_dermatological_report(
+                        vision_analysis=vision_analysis,
+                        cnn_prediction=cnn_prediction
+                    )
+                    diagnosis = {
+                        "success": True,
+                        "analysis": diagnosis_text,
+                        "model": "vision_api",
+                        "vision_data": vision_analysis
+                    }
+                else:
+                    # Fallback: usar diagnóstico CNN apenas
+                    diagnosis = generate_diagnosis(
+                        image_path=image_path,
+                        classification_result=result['class'],
+                        confidence=result['confidence'],
+                        gradcam_base64=result.get('gradcam')
+                    )
+                    diagnosis['model'] = 'cnn_only'
+                
+                logger.info(f"Diagnóstico gerado: {diagnosis.get('model', 'unknown')}")
             except Exception as e:
                 logger.warning(f"Erro ao gerar diagnóstico: {e}")
                 diagnosis = {

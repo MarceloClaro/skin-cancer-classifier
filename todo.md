@@ -481,3 +481,17 @@
 - [x] Atualizar GEMINI_API_KEY (pronta para produção)
 - [ ] Corrigir atualização da página /treinamento após retreinamento
 - [x] Testar Grad-CAM (SUCESSO em desenvolvimento)
+
+
+## Integração Google Cloud Vision API
+
+- [x] Pesquisar endpoint correto para análise de imagens (/v1/images:annotate)
+- [x] Criar módulo vision_analyzer.py com classe VisionAnalyzer
+- [x] Implementar método analyze_skin_lesion() com features: LABEL_DETECTION, IMAGE_PROPERTIES, SAFE_SEARCH_DETECTION, OBJECT_LOCALIZATION
+- [x] Integrar Vision API ao classify_wrapper.py
+- [x] Testar com imagem real de lesão de pele (fallback funcionando)
+- [x] Atualizar diagnóstico para usar dados da Vision API (relatório multimodal)
+- [x] Implementar sistema de fallback automático (CNN apenas quando Vision API indisponível)
+- [ ] Habilitar Vision API no Google Cloud Console (erro 403: API_KEY_SERVICE_BLOCKED)
+- [ ] Testar com Vision API habilitada
+- [ ] Documentar uso da Vision API
