@@ -347,22 +347,8 @@ export default function SkinClassifier() {
                     variant="default" 
                     className="w-full"
                     onClick={() => {
-                      // Download via tRPC
-                      const input = {"0":{"json":{"type":"quantized"}}};
-                      fetch('/api/trpc/model.download?batch=1&input=' + encodeURIComponent(JSON.stringify(input)))
-                        .then(res => res.json())
-                        .then(data => {
-                          const result = data[0].result.data;
-                          const blob = new Blob([Uint8Array.from(atob(result.data), c => c.charCodeAt(0))], { type: 'application/octet-stream' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = result.filename;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success('Download iniciado!');
-                        })
-                        .catch(err => toast.error('Erro ao fazer download'));
+                      window.location.href = '/api/download/model/quantized';
+                      toast.success('Download iniciado!');
                     }}
                   >
                     Baixar Modelo Quantizado
@@ -376,21 +362,8 @@ export default function SkinClassifier() {
                     variant="outline" 
                     className="w-full border-purple-300 hover:bg-purple-50"
                     onClick={() => {
-                      const input = {"0":{"json":{"type":"full"}}};
-                      fetch('/api/trpc/model.download?batch=1&input=' + encodeURIComponent(JSON.stringify(input)))
-                        .then(res => res.json())
-                        .then(data => {
-                          const result = data[0].result.data;
-                          const blob = new Blob([Uint8Array.from(atob(result.data), c => c.charCodeAt(0))], { type: 'application/octet-stream' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = result.filename;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success('Download iniciado!');
-                        })
-                        .catch(err => toast.error('Erro ao fazer download'));
+                      window.location.href = '/api/download/model/full';
+                      toast.success('Download iniciado!');
                     }}
                   >
                     Baixar Modelo Completo
@@ -404,21 +377,8 @@ export default function SkinClassifier() {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      const input = {"0":{"json":{"type":"documentation"}}};
-                      fetch('/api/trpc/model.download?batch=1&input=' + encodeURIComponent(JSON.stringify(input)))
-                        .then(res => res.json())
-                        .then(data => {
-                          const result = data[0].result.data;
-                          const blob = new Blob([atob(result.data)], { type: 'text/markdown' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = result.filename;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success('Download iniciado!');
-                        })
-                        .catch(err => toast.error('Erro ao fazer download'));
+                      window.location.href = '/api/download/model/documentation';
+                      toast.success('Download iniciado!');
                     }}
                   >
                     Baixar Documentação

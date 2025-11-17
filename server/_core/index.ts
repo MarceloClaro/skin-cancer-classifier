@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
+import fs from "fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -35,6 +37,47 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // Model download endpoint
+  app.get('/api/download/model/:type', (req, res) => {
+    const { type } = req.params;
+    
+    let filePath: string;
+    let filename: string;
+    
+    try {
+      const baseDir = '/home/ubuntu/skin_cancer_classifier_k230_page';
+      
+      if (type === 'quantized') {
+        filePath = path.join(baseDir, 'models', 'tflite', 'skin_cancer_k230_quantized.tflite');
+        filename = 'skin_cancer_k230_quantized.tflite';
+      } else if (type === 'full') {
+        filePath = path.join(baseDir, 'models', 'tflite', 'skin_cancer_k230.tflite');
+        filename = 'skin_cancer_k230.tflite';
+      } else if (type === 'documentation') {
+        filePath = path.join(baseDir, 'models', 'tflite', 'README.md');
+        filename = 'K230_Model_Documentation.md';
+      } else {
+        return res.status(400).json({ error: 'Invalid model type' });
+      }
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error('[DOWNLOAD] Error:', err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Download failed' });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('[DOWNLOAD] Error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",
