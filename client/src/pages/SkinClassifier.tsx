@@ -348,10 +348,11 @@ export default function SkinClassifier() {
                     className="w-full"
                     onClick={() => {
                       // Download via tRPC
-                      fetch('/api/trpc/model.download?input=' + encodeURIComponent(JSON.stringify({type: 'quantized'})))
+                      const input = {"0":{"json":{"type":"quantized"}}};
+                      fetch('/api/trpc/model.download?batch=1&input=' + encodeURIComponent(JSON.stringify(input)))
                         .then(res => res.json())
                         .then(data => {
-                          const result = data.result.data;
+                          const result = data[0].result.data;
                           const blob = new Blob([Uint8Array.from(atob(result.data), c => c.charCodeAt(0))], { type: 'application/octet-stream' });
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
@@ -375,10 +376,11 @@ export default function SkinClassifier() {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      fetch('/api/trpc/model.download?input=' + encodeURIComponent(JSON.stringify({type: 'documentation'})))
+                      const input = {"0":{"json":{"type":"documentation"}}};
+                      fetch('/api/trpc/model.download?batch=1&input=' + encodeURIComponent(JSON.stringify(input)))
                         .then(res => res.json())
                         .then(data => {
-                          const result = data.result.data;
+                          const result = data[0].result.data;
                           const blob = new Blob([atob(result.data)], { type: 'text/markdown' });
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');

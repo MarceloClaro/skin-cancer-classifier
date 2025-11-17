@@ -622,6 +622,57 @@ print(json.dumps(diagnosis))
       }
     }),
   }),
+
+  // Model download router
+  model: router({
+    download: publicProcedure
+      .input(z.object({
+        type: z.enum(["quantized", "full", "documentation"])
+      }))
+      .query(async ({ input }) => {
+        try {
+          let filePath: string;
+          let filename: string;
+          let contentType: string;
+
+          if (input.type === "quantized") {
+            filePath = join(process.cwd(), "models", "tflite", "skin_cancer_k230_quantized.tflite");
+            filename = "skin_cancer_k230_quantized.tflite";
+            contentType = "application/octet-stream";
+          } else if (input.type === "full") {
+            filePath = join(process.cwd(), "models", "tflite", "skin_cancer_k230.tflite");
+            filename = "skin_cancer_k230.tflite";
+            contentType = "application/octet-stream";
+          } else if (input.type === "documentation") {
+            filePath = join(process.cwd(), "models", "tflite", "README.md");
+            filename = "K230_Model_Documentation.md";
+            contentType = "text/markdown";
+          } else {
+            throw new Error("Tipo de arquivo inválido");
+          }
+
+          // Verificar se arquivo existe
+          if (!existsSync(filePath)) {
+            throw new Error(`Arquivo não encontrado: ${filePath}`);
+          }
+
+          // Ler arquivo e converter para base64
+          const fileBuffer = readFileSync(filePath);
+          const base64Data = fileBuffer.toString('base64');
+
+          return {
+            data: base64Data,
+            filename: filename,
+            contentType: contentType,
+            size: fileBuffer.length
+          };
+
+        } catch (error: any) {
+          console.error("[MODEL_DOWNLOAD] Erro:", error);
+          throw new Error(`Erro ao fazer download: ${error.message}`);
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
