@@ -78,6 +78,37 @@ async function startServer() {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+  
+  // Training visualization endpoint
+  app.get('/api/training-viz/:filename(*)', (req, res) => {
+    const { filename } = req.params;
+    const baseDir = '/home/ubuntu/skin_cancer_classifier_k230_page';
+    const trainingDir = 'models/training_report_20251116_140724';
+    
+    try {
+      // Construir caminho do arquivo
+      const filePath = path.join(baseDir, trainingDir, filename);
+      
+      // Verificar se arquivo existe
+      if (!fs.existsSync(filePath)) {
+        console.error('[TRAINING_VIZ] File not found:', filePath);
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      // Servir arquivo
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('[TRAINING_VIZ] Error:', err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to serve file' });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('[TRAINING_VIZ] Error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",
