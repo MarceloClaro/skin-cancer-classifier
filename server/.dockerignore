@@ -32,7 +32,7 @@ Thumbs.db
 
 # Documentação
 README*.md
-*.txt
+# *.txt  # Comentado para não ignorar requirements.txt
 
 # Dados temporários (exceto modelo)
 dataset_incremental/*
