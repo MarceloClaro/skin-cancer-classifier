@@ -607,18 +607,107 @@ print(json.dumps(diagnosis))
     
     triggerRetrain: publicProcedure.mutation(async () => {
       try {
-        // TODO: Implementar retreinamento real
-        // Por enquanto, apenas retorna sucesso
         console.log("[DATASET] Retreinamento solicitado");
+        
+        const scriptPath = join(process.cwd(), 'server', 'train_model_custom.py');
+        const command = `python3 ${scriptPath} --auto`;
+        
+        // Executar em background
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            console.error('[DATASET] Erro no retreinamento:', error);
+          }
+          if (stdout) console.log('[DATASET] stdout:', stdout);
+          if (stderr) console.error('[DATASET] stderr:', stderr);
+        });
         
         return {
           success: true,
-          message: "Retreinamento iniciado (simulado)"
+          message: "Retreinamento iniciado com sucesso"
         };
         
       } catch (error: any) {
         console.error("[DATASET] Erro ao iniciar retreinamento:", error);
-        throw new Error(`Erro ao iniciar retreinamento: ${error.message}`);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    }),
+    
+    resetAll: publicProcedure.mutation(async () => {
+      try {
+        console.log("[DATASET] Reset completo solicitado");
+        
+        const datasetDir = join(process.cwd(), 'dataset_incremental');
+        const modelsDir = join(process.cwd(), 'models');
+        
+        // Limpar dataset
+        const benignoDir = join(datasetDir, 'BENIGNO');
+        const malignoDir = join(datasetDir, 'MALIGNO');
+        const metadataDir = join(datasetDir, 'metadata');
+        
+        if (existsSync(benignoDir)) {
+          const files = readdirSync(benignoDir);
+          for (const file of files) {
+            await unlink(join(benignoDir, file));
+          }
+        }
+        
+        if (existsSync(malignoDir)) {
+          const files = readdirSync(malignoDir);
+          for (const file of files) {
+            await unlink(join(malignoDir, file));
+          }
+        }
+        
+        if (existsSync(metadataDir)) {
+          const files = readdirSync(metadataDir);
+          for (const file of files) {
+            await unlink(join(metadataDir, file));
+          }
+        }
+        
+        // Limpar arquivos de status
+        const statusFiles = [
+          join(datasetDir, 'retrain_history.json'),
+          join(datasetDir, 'retrain_status.json'),
+          join(datasetDir, 'statistics.json')
+        ];
+        
+        for (const file of statusFiles) {
+          if (existsSync(file)) {
+            await unlink(file);
+          }
+        }
+        
+        // Limpar modelos treinados (exceto os pré-treinados)
+        const modelFiles = [
+          join(modelsDir, 'skin_cancer_model.h5'),
+          join(modelsDir, 'training_curves.png'),
+          join(modelsDir, 'confusion_matrix.png'),
+          join(modelsDir, 'roc_curve.png')
+        ];
+        
+        for (const file of modelFiles) {
+          if (existsSync(file)) {
+            await unlink(file);
+          }
+        }
+        
+        console.log("[DATASET] Reset completo concluído");
+        
+        return {
+          success: true,
+          message: "Dataset e modelos limpos com sucesso"
+        };
+        
+      } catch (error: any) {
+        console.error("[DATASET] Erro ao fazer reset:", error);
+        return {
+          success: false,
+          error: error.message
+        };
       }
     }),
   }),
@@ -676,3 +765,169 @@ print(json.dumps(diagnosis))
 });
 
 export type AppRouter = typeof appRouter;
+
+        
+      } catch (error: any) {
+        console.error("[DATASET] Erro ao fazer reset:", error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    }),
+    
+    listImages: publicProcedure
+      .input(z.object({
+        classFilter: z.enum(["all", "BENIGNO", "MALIGNO"]).default("all"),
+        page: z.number().default(1),
+        pageSize: z.number().default(20)
+      }))
+      .query(async ({ input }) => {
+        try {
+          const datasetDir = join(process.cwd(), 'dataset_incremental');
+          const images: any[] = [];
+          
+          const classes = input.classFilter === "all" ? ["BENIGNO", "MALIGNO"] : [input.classFilter];
+          
+          for (const className of classes) {
+            const classDir = join(datasetDir, className);
+            if (!existsSync(classDir)) continue;
+            
+            const files = readdirSync(classDir).filter(f => f.endsWith('.png') || f.endsWith('.jpg'));
+            
+            for (const file of files) {
+              const filePath = join(classDir, file);
+              const stats = statSync(filePath);
+              
+              // Ler metadados se existirem
+              const metadataPath = join(datasetDir, 'metadata', `${file}.json`);
+              let metadata = null;
+              if (existsSync(metadataPath)) {
+                metadata = JSON.parse(readFileSync(metadataPath, 'utf-8'));
+              }
+              
+              images.push({
+                filename: file,
+                class: className,
+                path: filePath,
+                size: stats.size,
+                created: stats.mtime.toISOString(),
+                metadata: metadata
+              });
+            }
+          }
+          
+          // Ordenar por data (mais recente primeiro)
+          images.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+          
+          // Paginar
+          const start = (input.page - 1) * input.pageSize;
+          const end = start + input.pageSize;
+          const paginatedImages = images.slice(start, end);
+          
+          return {
+            images: paginatedImages,
+            total: images.length,
+            page: input.page,
+            pageSize: input.pageSize,
+            totalPages: Math.ceil(images.length / input.pageSize)
+          };
+          
+        } catch (error: any) {
+          console.error("[DATASET] Erro ao listar imagens:", error);
+          throw new Error(`Erro ao listar imagens: ${error.message}`);
+        }
+      }),
+    
+    deleteImage: publicProcedure
+      .input(z.object({
+        filename: z.string(),
+        class: z.enum(["BENIGNO", "MALIGNO"])
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const datasetDir = join(process.cwd(), 'dataset_incremental');
+          const imagePath = join(datasetDir, input.class, input.filename);
+          const metadataPath = join(datasetDir, 'metadata', `${input.filename}.json`);
+          
+          // Remover imagem
+          if (existsSync(imagePath)) {
+            await unlink(imagePath);
+          }
+          
+          // Remover metadados
+          if (existsSync(metadataPath)) {
+            await unlink(metadataPath);
+          }
+          
+          console.log(`[DATASET] Imagem removida: ${input.filename}`);
+          
+          return {
+            success: true,
+            message: "Imagem removida com sucesso"
+          };
+          
+        } catch (error: any) {
+          console.error("[DATASET] Erro ao remover imagem:", error);
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }),
+    
+    uploadImages: publicProcedure
+      .input(z.object({
+        images: z.array(z.object({
+          data: z.string(), // base64
+          class: z.enum(["BENIGNO", "MALIGNO"]),
+          filename: z.string().optional()
+        }))
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const datasetDir = join(process.cwd(), 'dataset_incremental');
+          const uploaded: string[] = [];
+          const errors: string[] = [];
+          
+          for (const image of input.images) {
+            try {
+              const timestamp = Date.now();
+              const filename = image.filename || `${image.class}_${timestamp}_${Math.random().toString(36).substr(2, 9)}.png`;
+              const destPath = join(datasetDir, image.class, filename);
+              
+              // Decodificar base64
+              const imageBuffer = Buffer.from(
+                image.data.replace(/^data:image\/\w+;base64,/, ""),
+                "base64"
+              );
+              
+              // Salvar imagem
+              await writeFile(destPath, imageBuffer);
+              uploaded.push(filename);
+              
+              console.log(`[DATASET] Imagem salva: ${filename}`);
+              
+            } catch (err: any) {
+              errors.push(`${image.filename || 'unknown'}: ${err.message}`);
+            }
+          }
+          
+          return {
+            success: errors.length === 0,
+            uploaded: uploaded.length,
+            total: input.images.length,
+            errors: errors
+          };
+          
+        } catch (error: any) {
+          console.error("[DATASET] Erro ao fazer upload:", error);
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }),
+  }),
+
+  // Model download router

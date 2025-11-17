@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Database, TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, Database, TrendingUp, AlertCircle, RefreshCw, Trash2, Upload } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import ResetDatasetModal from "@/components/ResetDatasetModal";
+import DatasetUploader from "@/components/DatasetUploader";
+import DatasetGallery from "@/components/DatasetGallery";
 import {
   BarChart,
   Bar,
@@ -27,6 +30,8 @@ const COLORS = {
 
 export default function AdminDataset() {
   const [isRetraining, setIsRetraining] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
 
   // Buscar estatísticas do dataset
   const { data: stats, isLoading, refetch } = trpc.dataset.getStatistics.useQuery(undefined, {
@@ -111,14 +116,48 @@ export default function AdminDataset() {
     <div className="min-h-screen bg-background">
       <div className="container py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Database className="w-8 h-8" />
-            Dashboard do Dataset
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Métricas e gerenciamento do dataset incremental
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <Database className="w-8 h-8" />
+                Dashboard do Dataset
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Métricas e gerenciamento do dataset incremental
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowUploader(!showUploader)}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {showUploader ? "Ocultar Upload" : "Upload Dataset"}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setShowResetModal(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Limpar Tudo
+              </Button>
+            </div>
+          </div>
         </div>
+
+        {/* Upload de Dataset */}
+        {showUploader && (
+          <div className="mb-8">
+            <DatasetUploader onSuccess={() => refetch()} />
+          </div>
+        )}
+
+        {/* Modal de Reset */}
+        <ResetDatasetModal
+          open={showResetModal}
+          onOpenChange={setShowResetModal}
+          onSuccess={() => refetch()}
+        />
 
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -238,6 +277,11 @@ export default function AdminDataset() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Galeria do Dataset */}
+        <div className="mb-8">
+          <DatasetGallery onRefresh={() => refetch()} />
         </div>
 
         {/* Ação de Retreinamento */}
