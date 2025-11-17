@@ -1,0 +1,16 @@
+# Forçar Railway a usar Dockerfile em vez de detectar Node.js
+# Railway deve ler server/Dockerfile e server/railway.json
+
+# Ignorar arquivos Node.js da raiz
+package.json
+package-lock.json
+node_modules/
+dist/
+.next/
+
+# Ignorar arquivos do frontend
+client/
+drizzle/
+shared/
+vite.config.ts
+tsconfig.json
