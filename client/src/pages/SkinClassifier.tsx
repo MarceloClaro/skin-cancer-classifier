@@ -339,7 +339,7 @@ export default function SkinClassifier() {
                 reduzindo o tamanho em 70% e acelerando a inferência em dispositivos embarcados.
               </p>
               
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
                 <div className="bg-white p-4 rounded-lg border border-blue-200">
                   <p className="font-semibold text-blue-600 mb-2">Modelo Quantizado (Recomendado)</p>
                   <p className="text-xs text-gray-600 mb-3">2.74 MB • INT8 • Otimizado para K230</p>
@@ -366,6 +366,34 @@ export default function SkinClassifier() {
                     }}
                   >
                     Baixar Modelo Quantizado
+                  </Button>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-purple-200">
+                  <p className="font-semibold text-purple-600 mb-2">Modelo Completo</p>
+                  <p className="text-xs text-gray-600 mb-3">9.1 MB • FP32 • Comparação de Performance</p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-purple-300 hover:bg-purple-50"
+                    onClick={() => {
+                      const input = {"0":{"json":{"type":"full"}}};
+                      fetch('/api/trpc/model.download?batch=1&input=' + encodeURIComponent(JSON.stringify(input)))
+                        .then(res => res.json())
+                        .then(data => {
+                          const result = data[0].result.data;
+                          const blob = new Blob([Uint8Array.from(atob(result.data), c => c.charCodeAt(0))], { type: 'application/octet-stream' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = result.filename;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('Download iniciado!');
+                        })
+                        .catch(err => toast.error('Erro ao fazer download'));
+                    }}
+                  >
+                    Baixar Modelo Completo
                   </Button>
                 </div>
                 
