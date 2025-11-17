@@ -584,3 +584,13 @@
 - [x] Fazer deploy via railway up --detach
 - [x] Capturar e exibir URL pública (salva em .railway_url)
 - [x] Criar README_DEPLOY.md com guia completo (método automático + manual)
+
+
+## Push para GitHub e Deploy Railway
+
+- [ ] Verificar status do git
+- [ ] Adicionar todos os arquivos novos (Dockerfile, deploy.sh, etc.)
+- [ ] Fazer commit com mensagem descritiva
+- [ ] Fazer push para repositório MarceloClaro/anny
+- [ ] Verificar se push foi bem-sucedido
+- [ ] Guiar usuário no deploy Railway via web

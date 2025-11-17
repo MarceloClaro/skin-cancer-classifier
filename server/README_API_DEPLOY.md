@@ -38,7 +38,7 @@ Certifique-se de que os seguintes arquivos estão no diretório `server/`:
 No painel do Render, vá em **Environment** e adicione:
 
 ```
-GROQ_API_KEY=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
+GROQ_API_KEY=your_groq_api_key_here
 GEMINI_API_KEY=<sua_nova_chave_gemini>
 PORT=10000
 ```

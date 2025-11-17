@@ -82,7 +82,7 @@ Escolha:
 ### 4. Configurar Variáveis
 
 ```bash
-railway variables set GROQ_API_KEY="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"
+railway variables set GROQ_API_KEY="your_groq_api_key_here"
 railway variables set GEMINI_API_KEY="<sua_chave_gemini>"
 railway variables set PORT=8000
 ```

@@ -105,8 +105,8 @@ echo ""
 echo "Digite suas API keys (ou pressione ENTER para pular):"
 echo ""
 
-read -p "GROQ_API_KEY (atual: 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): " GROQ_KEY
-GROQ_KEY=${GROQ_KEY:-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}
+read -p "GROQ_API_KEY: " GROQ_KEY
+GROQ_KEY=${GROQ_KEY:-YOUR_GROQ_API_KEY_HERE}
 
 read -p "GEMINI_API_KEY (deixe vazio se não tiver): " GEMINI_KEY
 
