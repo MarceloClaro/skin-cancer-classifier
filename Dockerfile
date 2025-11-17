@@ -1,5 +1,5 @@
 # Dockerfile para API de Classificação de Câncer de Pele
-# Otimizado para Railway/Fly.io
+# Otimizado para Railway - BUILD NA RAIZ
 
 FROM python:3.11-slim
 
@@ -23,13 +23,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copiar requirements primeiro (cache layer)
-COPY requirements.txt .
+COPY server/requirements.txt .
 
 # Instalar dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código da aplicação
-COPY . .
+# Copiar código da aplicação (apenas pasta server/)
+COPY server/ .
 
 # Criar diretórios necessários
 RUN mkdir -p dataset_incremental/BENIGNO dataset_incremental/MALIGNO
@@ -39,7 +39,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+    CMD python -c "import requests; requests.get('http://localhost:8000/health', timeout=5)"
 
 # Comando de inicialização
 CMD ["python", "api_server.py"]
