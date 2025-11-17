@@ -1,0 +1,6 @@
+# Ignorar arquivos Node.js para forçar uso do Dockerfile
+package.json
+package-lock.json
+node_modules/
+dist/
+.next/
